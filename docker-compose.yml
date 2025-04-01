@@ -1,0 +1,45 @@
+version: '3.9'
+
+services:
+  db:
+    image: mysql
+    volumes:
+    - db:/var/lib/mysql
+    restart: unless-stopped
+    ports:
+    - "33306:3306"
+    environment:
+    - MYSQL_ROOT_PASSWORD=1234
+    - MYSQL_DATABASE=mydb
+    - MYSQL_USER=winboy1002
+    - MYSQL_PASSWORD=1234
+    networks:
+    - django
+
+  my_django:
+    depends_on:
+    - db
+    image: cd484474f5fe4e75067d8562ebd0394130fde6f38a095091bebfa939220a585e
+    volumes:
+    - "/c/Users/HIT/Desktop/docker:/root/workspace"
+    ports:
+    - "30011-30020:30011-30020"
+    restart: unless-stopped
+    networks:
+    - django
+    stdin_open: true # docker run -i
+    tty: true        # docker run -t
+    command: ["/bin/bash"]
+
+volumes:
+  db: {}
+  workspace:
+    driver: local
+    driver_opts:
+      type: none
+      device: "/c/Users/HIT/Desktop/docker" # ✅ Windows에서 제대로 인식되는 경로
+      o: bind
+
+networks:
+  django:
+    driver: bridge
