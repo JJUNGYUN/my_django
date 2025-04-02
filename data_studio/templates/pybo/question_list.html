@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
+{% load mathfilters %}
+{% block content %}
+
+<div class="container my-3">
+    <table class="table">
+        <thead>
+            <tr class="table-dark">
+                <th>No</th>
+                <th>Title</th>
+                <th>Publish date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% if question_list %}
+                {% for question in question_list %}
+                    <tr>
+                        <td>{{ question.id }}</td>
+                        <td>
+                            <a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a>
+                        </td>
+                        <td>{{ question.create_date }}</td>
+                    </tr>
+                {% endfor %}
+            {% else %}
+                <tr>
+                    <td colspan="3">질문이 없습니다.</td>
+                </tr>
+            {% endif %}
+        </tbody>
+    </table>
+
+    <ul class="pagination justify-content-centor">
+        {% if question_list.has_previous %}
+            <li class="page_item">
+                <a class="page-link" href="?page={{question_list.previous_page_number}}">◀</a>
+            </li>
+        {% else %}
+            <li class="page_item disabled">
+                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
+            </li> 
+        {%endif%}
+
+        {% for page_number in question_list.paginator.page_range%}
+            {% if page_number|add:-1|div:10|add:0 == question_list.number|add:-1|div:10|add:0 %}
+                {% if page_number == question_list.number %}
+                    <li class="page-item active" aria-current="page">
+                        <a class="page-link" href="?page={{page_number}}">{{page_number}}</a>
+                    </li>
+                {%else%}
+                    <li class="page_item">
+                        <a class="page-link" href="?page={{page_number}}">{{page_number}}</a>
+                    </li>
+                {%endif%}
+            {%endif%}
+        {%endfor%}
+
+        {% if question_list.has_next %}
+            <li class="page_item">
+                <a class="page-link" href="?page={{ question_list.next_page_number }}">▶</a>
+            </li>
+        {%else%}
+            <li class="page_item disabled">
+                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
+            </li> 
+        {%endif%}
+    </ul>
+    <a href="{% url 'pybo:question_create' %}" class="btn btn-primary">create question</a>
+</div>
+
+{% endblock %}
+
+
+
+

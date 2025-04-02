@@ -1,0 +1,35 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h4 class="my-3 border-bottom pb-2">create question</h4>
+    <form method="post" >
+        {% csrf_token %}
+        <!-- {{form.as_p}} -->
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for field in form %}
+            {% if field.errors %}
+            <div>
+                <strong>
+                    {{ field.label}}
+                </strong>
+                {{field.errors}}
+            </div>
+            {% endif %}
+            {% endfor %}        
+        </div>
+        {% endif %}
+        <div class="mb-3">
+            <label for="subject" class="form-label">title</label>
+            <input type="text" class="form-control" name="subject" id="subject" value="{{form.subject.value|default_if_none:''}}">
+        </div>
+        <div class="mb-3">
+            <label for="content" class="form-label">title</label>
+            <textarea type="text" class="form-control" name="content" id="content" value="{{form.subject.value|default_if_none:''}}" rows="10">    
+            </textarea>
+        </div>
+        <button tpye="submit" class="btn btn-primary">save</button>
+    </form>
+</div>
+{% endblock %}
