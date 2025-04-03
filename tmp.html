@@ -1,0 +1,326 @@
+<hr />
+<p>language: en<br />
+    tags:<br />
+    - exbert<br />
+    license: apache-2.0<br />
+    datasets:<br />
+    - bookcorpus<br />
+    - wikipedia</p>
+<hr />
+<h1 id="bert-base-model-uncased">BERT base model (uncased)</h1>
+<p>Pretrained model on English language using a masked language modeling (MLM) objective. It was introduced in<br />
+    <a href="https://arxiv.org/abs/1810.04805">this paper</a> and first released in<br />
+    <a href="https://github.com/google-research/bert">this repository</a>. This model is uncased: it does not make a
+    difference<br />
+    between english and English.
+</p>
+<p>Disclaimer: The team releasing BERT did not write a model card for this model so this model card has been written
+    by<br />
+    the Hugging Face team.</p>
+<h2 id="model-description">Model description</h2>
+<p>BERT is a transformers model pretrained on a large corpus of English data in a self-supervised fashion. This means
+    it<br />
+    was pretrained on the raw texts only, with no humans labeling them in any way (which is why it can use lots of<br />
+    publicly available data) with an automatic process to generate inputs and labels from those texts. More precisely,
+    it<br />
+    was pretrained with two objectives:</p>
+<ul>
+    <li>Masked language modeling (MLM): taking a sentence, the model randomly masks 15% of the words in the input then
+        run<br />
+        the entire masked sentence through the model and has to predict the masked words. This is different from
+        traditional<br />
+        recurrent neural networks (RNNs) that usually see the words one after the other, or from autoregressive models
+        like<br />
+        GPT which internally masks the future tokens. It allows the model to learn a bidirectional representation of
+        the<br />
+        sentence.</li>
+    <li>Next sentence prediction (NSP): the models concatenates two masked sentences as inputs during pretraining.
+        Sometimes<br />
+        they correspond to sentences that were next to each other in the original text, sometimes not. The model then
+        has to<br />
+        predict if the two sentences were following each other or not.</li>
+</ul>
+<p>This way, the model learns an inner representation of the English language that can then be used to extract
+    features<br />
+    useful for downstream tasks: if you have a dataset of labeled sentences, for instance, you can train a
+    standard<br />
+    classifier using the features produced by the BERT model as inputs.</p>
+<h2 id="model-variations">Model variations</h2>
+<p>BERT has originally been released in base and large variations, for cased and uncased input text. The uncased models
+    also strips out an accent markers.<br />
+    Chinese and multilingual uncased and cased versions followed shortly after.<br />
+    Modified preprocessing with whole word masking has replaced subpiece masking in a following work, with the release
+    of two models.<br />
+    Other 24 smaller models are released afterward. </p>
+<p>The detailed release history can be found on the <a
+        href="https://github.com/google-research/bert/blob/master/README.md">google-research/bert readme</a> on github.
+</p>
+<table>
+    <thead>
+        <tr>
+            <th>Model</th>
+            <th>#params</th>
+            <th>Language</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><a href="https://huggingface.co/bert-base-uncased"><code>bert-base-uncased</code></a></td>
+            <td>110M</td>
+            <td>English</td>
+        </tr>
+        <tr>
+            <td><a href="https://huggingface.co/bert-large-uncased"><code>bert-large-uncased</code></a></td>
+            <td>340M</td>
+            <td>English</td>
+        </tr>
+        <tr>
+            <td><a href="https://huggingface.co/bert-base-cased"><code>bert-base-cased</code></a></td>
+            <td>110M</td>
+            <td>English</td>
+        </tr>
+        <tr>
+            <td><a href="https://huggingface.co/bert-large-cased"><code>bert-large-cased</code></a></td>
+            <td>340M</td>
+            <td>English</td>
+        </tr>
+        <tr>
+            <td><a href="https://huggingface.co/bert-base-chinese"><code>bert-base-chinese</code></a></td>
+            <td>110M</td>
+            <td>Chinese</td>
+        </tr>
+        <tr>
+            <td><a
+                    href="https://huggingface.co/bert-base-multilingual-cased"><code>bert-base-multilingual-cased</code></a>
+            </td>
+            <td>110M</td>
+            <td>Multiple</td>
+        </tr>
+        <tr>
+            <td><a
+                    href="https://huggingface.co/bert-large-uncased-whole-word-masking"><code>bert-large-uncased-whole-word-masking</code></a>
+            </td>
+            <td>340M</td>
+            <td>English</td>
+        </tr>
+        <tr>
+            <td><a
+                    href="https://huggingface.co/bert-large-cased-whole-word-masking"><code>bert-large-cased-whole-word-masking</code></a>
+            </td>
+            <td>340M</td>
+            <td>English</td>
+        </tr>
+    </tbody>
+</table>
+<h2 id="intended-uses-limitations">Intended uses &amp; limitations</h2>
+<p>You can use the raw model for either masked language modeling or next sentence prediction, but it's mostly intended
+    to<br />
+    be fine-tuned on a downstream task. See the <a href="https://huggingface.co/models?filter=bert">model hub</a> to
+    look for<br />
+    fine-tuned versions of a task that interests you.</p>
+<p>Note that this model is primarily aimed at being fine-tuned on tasks that use the whole sentence (potentially
+    masked)<br />
+    to make decisions, such as sequence classification, token classification or question answering. For tasks such as
+    text<br />
+    generation you should look at model like GPT2.</p>
+<h3 id="how-to-use">How to use</h3>
+<p>You can use this model directly with a pipeline for masked language modeling:</p>
+<div class="codehilite">
+    <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipeline</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">unmasker</span> <span class="o">=</span> <span class="n">pipeline</span><span class="p">(</span><span class="s1">&#39;fill-mask&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;bert-base-uncased&#39;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">unmasker</span><span class="p">(</span><span class="s2">&quot;Hello I&#39;m a [MASK] model.&quot;</span><span class="p">)</span>
+    
+    <span class="p">[{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s2">&quot;[CLS] hello i&#39;m a fashion model. [SEP]&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.1073106899857521</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">4827</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;fashion&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s2">&quot;[CLS] hello i&#39;m a role model. [SEP]&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.08774490654468536</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">2535</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;role&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s2">&quot;[CLS] hello i&#39;m a new model. [SEP]&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.05338378623127937</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">2047</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;new&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s2">&quot;[CLS] hello i&#39;m a super model. [SEP]&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.04667217284440994</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">3565</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;super&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s2">&quot;[CLS] hello i&#39;m a fine model. [SEP]&quot;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.027095865458250046</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">2986</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;fine&#39;</span><span class="p">}]</span>
+    </code></pre>
+</div>
+
+<p>Here is how to use this model to get the features of a given text in PyTorch:</p>
+<div class="codehilite">
+    <pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BertTokenizer</span><span class="p">,</span> <span class="n">BertModel</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">BertTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;bert-base-uncased&#39;</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">BertModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;bert-base-uncased&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Replace me by any text you&#39;d like.&quot;</span>
+    <span class="n">encoded_input</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;pt&#39;</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">encoded_input</span><span class="p">)</span>
+    </code></pre>
+</div>
+
+<p>and in TensorFlow:</p>
+<div class="codehilite">
+    <pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">BertTokenizer</span><span class="p">,</span> <span class="n">TFBertModel</span>
+    <span class="n">tokenizer</span> <span class="o">=</span> <span class="n">BertTokenizer</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s1">&#39;bert-base-uncased&#39;</span><span class="p">)</span>
+    <span class="n">model</span> <span class="o">=</span> <span class="n">TFBertModel</span><span class="o">.</span><span class="n">from_pretrained</span><span class="p">(</span><span class="s2">&quot;bert-base-uncased&quot;</span><span class="p">)</span>
+    <span class="n">text</span> <span class="o">=</span> <span class="s2">&quot;Replace me by any text you&#39;d like.&quot;</span>
+    <span class="n">encoded_input</span> <span class="o">=</span> <span class="n">tokenizer</span><span class="p">(</span><span class="n">text</span><span class="p">,</span> <span class="n">return_tensors</span><span class="o">=</span><span class="s1">&#39;tf&#39;</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="n">encoded_input</span><span class="p">)</span>
+    </code></pre>
+</div>
+
+<h3 id="limitations-and-bias">Limitations and bias</h3>
+<p>Even if the training data used for this model could be characterized as fairly neutral, this model can have
+    biased<br />
+    predictions:</p>
+<div class="codehilite">
+    <pre><span></span><code><span class="o">&gt;&gt;&gt;</span> <span class="kn">from</span><span class="w"> </span><span class="nn">transformers</span><span class="w"> </span><span class="kn">import</span> <span class="n">pipeline</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">unmasker</span> <span class="o">=</span> <span class="n">pipeline</span><span class="p">(</span><span class="s1">&#39;fill-mask&#39;</span><span class="p">,</span> <span class="n">model</span><span class="o">=</span><span class="s1">&#39;bert-base-uncased&#39;</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">unmasker</span><span class="p">(</span><span class="s2">&quot;The man worked as a [MASK].&quot;</span><span class="p">)</span>
+    
+    <span class="p">[{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the man worked as a carpenter. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.09747550636529922</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">10533</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;carpenter&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the man worked as a waiter. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.0523831807076931</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">15610</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;waiter&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the man worked as a barber. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.04962705448269844</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">13362</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;barber&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the man worked as a mechanic. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.03788609802722931</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">15893</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;mechanic&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the man worked as a salesman. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.037680890411138535</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">18968</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;salesman&#39;</span><span class="p">}]</span>
+    
+    <span class="o">&gt;&gt;&gt;</span> <span class="n">unmasker</span><span class="p">(</span><span class="s2">&quot;The woman worked as a [MASK].&quot;</span><span class="p">)</span>
+    
+    <span class="p">[{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the woman worked as a nurse. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.21981462836265564</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">6821</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;nurse&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the woman worked as a waitress. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.1597415804862976</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">13877</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;waitress&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the woman worked as a maid. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.1154729500412941</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">10850</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;maid&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the woman worked as a prostitute. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.037968918681144714</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">19215</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;prostitute&#39;</span><span class="p">},</span>
+     <span class="p">{</span><span class="s1">&#39;sequence&#39;</span><span class="p">:</span> <span class="s1">&#39;[CLS] the woman worked as a cook. [SEP]&#39;</span><span class="p">,</span>
+      <span class="s1">&#39;score&#39;</span><span class="p">:</span> <span class="mf">0.03042375110089779</span><span class="p">,</span>
+      <span class="s1">&#39;token&#39;</span><span class="p">:</span> <span class="mi">5660</span><span class="p">,</span>
+      <span class="s1">&#39;token_str&#39;</span><span class="p">:</span> <span class="s1">&#39;cook&#39;</span><span class="p">}]</span>
+    </code></pre>
+</div>
+
+<p>This bias will also affect all fine-tuned versions of this model.</p>
+<h2 id="training-data">Training data</h2>
+<p>The BERT model was pretrained on <a href="https://yknzhu.wixsite.com/mbweb">BookCorpus</a>, a dataset consisting of
+    11,038<br />
+    unpublished books and <a href="https://en.wikipedia.org/wiki/English_Wikipedia">English Wikipedia</a> (excluding
+    lists, tables and<br />
+    headers).</p>
+<h2 id="training-procedure">Training procedure</h2>
+<h3 id="preprocessing">Preprocessing</h3>
+<p>The texts are lowercased and tokenized using WordPiece and a vocabulary size of 30,000. The inputs of the model
+    are<br />
+    then of the form:</p>
+<div class="codehilite">
+    <pre><span></span><code><span class="o">[</span><span class="n">CLS</span><span class="o">]</span><span class="w"> </span><span class="n">Sentence</span><span class="w"> </span><span class="n">A</span><span class="w"> </span><span class="o">[</span><span class="n">SEP</span><span class="o">]</span><span class="w"> </span><span class="n">Sentence</span><span class="w"> </span><span class="n">B</span><span class="w"> </span><span class="o">[</span><span class="n">SEP</span><span class="o">]</span>
+    </code></pre>
+</div>
+
+<p>With probability 0.5, sentence A and sentence B correspond to two consecutive sentences in the original corpus, and
+    in<br />
+    the other cases, it's another random sentence in the corpus. Note that what is considered a sentence here is a<br />
+    consecutive span of text usually longer than a single sentence. The only constrain is that the result with the
+    two<br />
+    "sentences" has a combined length of less than 512 tokens.</p>
+<p>The details of the masking procedure for each sentence are the following:<br />
+    - 15% of the tokens are masked.<br />
+    - In 80% of the cases, the masked tokens are replaced by <code>[MASK]</code>.<br />
+    - In 10% of the cases, the masked tokens are replaced by a random token (different) from the one they replace.<br />
+    - In the 10% remaining cases, the masked tokens are left as is.</p>
+<h3 id="pretraining">Pretraining</h3>
+<p>The model was trained on 4 cloud TPUs in Pod configuration (16 TPU chips total) for one million steps with a batch
+    size<br />
+    of 256. The sequence length was limited to 128 tokens for 90% of the steps and 512 for the remaining 10%. The
+    optimizer<br />
+    used is Adam with a learning rate of 1e-4, \(\beta_{1} = 0.9\) and \(\beta_{2} = 0.999\), a weight decay of
+    0.01,<br />
+    learning rate warmup for 10,000 steps and linear decay of the learning rate after.</p>
+<h2 id="evaluation-results">Evaluation results</h2>
+<p>When fine-tuned on downstream tasks, this model achieves the following results:</p>
+<p>Glue test results:</p>
+<table>
+    <thead>
+        <tr>
+            <th style="text-align: center;">Task</th>
+            <th style="text-align: center;">MNLI-(m/mm)</th>
+            <th style="text-align: center;">QQP</th>
+            <th style="text-align: center;">QNLI</th>
+            <th style="text-align: center;">SST-2</th>
+            <th style="text-align: center;">CoLA</th>
+            <th style="text-align: center;">STS-B</th>
+            <th style="text-align: center;">MRPC</th>
+            <th style="text-align: center;">RTE</th>
+            <th style="text-align: center;">Average</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td style="text-align: center;"></td>
+            <td style="text-align: center;">84.6/83.4</td>
+            <td style="text-align: center;">71.2</td>
+            <td style="text-align: center;">90.5</td>
+            <td style="text-align: center;">93.5</td>
+            <td style="text-align: center;">52.1</td>
+            <td style="text-align: center;">85.8</td>
+            <td style="text-align: center;">88.9</td>
+            <td style="text-align: center;">66.4</td>
+            <td style="text-align: center;">79.6</td>
+        </tr>
+    </tbody>
+</table>
+<h3 id="bibtex-entry-and-citation-info">BibTeX entry and citation info</h3>
+<div class="codehilite">
+    <pre><span></span><code><span class="nc">@article</span><span class="p">{</span><span class="nl">DBLP:journals/corr/abs-1810-04805</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">author</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{Jacob Devlin and</span>
+    <span class="s">               Ming{-}Wei Chang and</span>
+    <span class="s">               Kenton Lee and</span>
+    <span class="s">               Kristina Toutanova}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">title</span><span class="w">     </span><span class="p">=</span><span class="w"> </span><span class="s">{{BERT:} Pre-training of Deep Bidirectional Transformers for Language</span>
+    <span class="s">               Understanding}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">journal</span><span class="w">   </span><span class="p">=</span><span class="w"> </span><span class="s">{CoRR}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">volume</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{abs/1810.04805}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">year</span><span class="w">      </span><span class="p">=</span><span class="w"> </span><span class="s">{2018}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">url</span><span class="w">       </span><span class="p">=</span><span class="w"> </span><span class="s">{http://arxiv.org/abs/1810.04805}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">archivePrefix</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{arXiv}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">eprint</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{1810.04805}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">timestamp</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{Tue, 30 Oct 2018 20:39:56 +0100}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">biburl</span><span class="w">    </span><span class="p">=</span><span class="w"> </span><span class="s">{https://dblp.org/rec/journals/corr/abs-1810-04805.bib}</span><span class="p">,</span>
+    <span class="w">  </span><span class="na">bibsource</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s">{dblp computer science bibliography, https://dblp.org}</span>
+    <span class="p">}</span>
+    </code></pre>
+</div>
+
+<p><a href="https://huggingface.co/exbert/?model=bert-base-uncased"><br />
+        <img width="300px" src="https://cdn-media.huggingface.co/exbert/button.png"><br />
+    </a></p>
