@@ -15,6 +15,8 @@
 
     <div class="card my-3">
         <div class="card-body">
+            {% load static %}
+            <link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
             <div class="card-text">
                 {{ readme|mark|safe }}
             </div>

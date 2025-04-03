@@ -19,8 +19,7 @@ def convert_markdown_to_html(text):
         text, 
         extensions=["nl2br", "fenced_code", "toc","tables", CodeHiliteExtension(linenums=False)]
     )
-    style = HtmlFormatter().get_style_defs('.codehilite')
-    return f"<style>{style}</style>{html}"
+    return f"{html}"
 
 @register.filter
 def mark(value):
