@@ -17,9 +17,9 @@
         <div class="card-body">
             {% load static %}
             <link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-            <div class="card-text">
-                {{ readme|mark|safe }}
-            </div>
+                <div class="markdown card-text">
+                    {{ readme|mark|safe }}
+                </div>
             <div class="d-flex justify-content-end">
                 <div class="badge bg-light text-dark p-2">
                     {{ model.create_date}}
