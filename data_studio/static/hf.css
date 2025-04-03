@@ -1,0 +1,12 @@
+pre code {
+    
+    color: #000000; /* 글씨 색상 */
+    padding: 1rem;
+    border-radius: 5px;
+    line-height: 1.5;
+    overflow-x: auto;
+    font-size: 0.9rem;
+}
+pre {
+    background-color: #e0e0e0; /* 어두운 배경 */
+}

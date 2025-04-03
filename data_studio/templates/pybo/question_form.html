@@ -25,9 +25,8 @@
             <input type="text" class="form-control" name="subject" id="subject" value="{{form.subject.value|default_if_none:''}}">
         </div>
         <div class="mb-3">
-            <label for="content" class="form-label">title</label>
-            <textarea type="text" class="form-control" name="content" id="content" value="{{form.subject.value|default_if_none:''}}" rows="10">    
-            </textarea>
+            <label for="content" class="form-label">content</label>
+            <textarea class="form-control" name="content" id="content" rows="10">{{form.subject.value|default_if_none:''}}</textarea>
         </div>
         <button tpye="submit" class="btn btn-primary">save</button>
     </form>

@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block content %}
+{% load markdown_extras %}
+
+<div class="container my-3">
+    <div class="card-body border-bottom py-2">
+        <div class="d-flex justify-content-between align-items-center">
+            <!-- 제목 (왼쪽 정렬) -->
+            <h4 class="mb-0">{{ model.name }}</h4>
+            
+            <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
+            <h6 class="mb-0 text-muted">Author: {{ model.author }}</h6>
+        </div>
+    </div>
+
+    <div class="card my-3">
+        <div class="card-body">
+            <div class="card-text">
+                {{ readme|mark|safe }}
+            </div>
+            <div class="d-flex justify-content-end">
+                <div class="badge bg-light text-dark p-2">
+                    {{ model.create_date}}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center">
+        <input type="submit" value="답변등록" class="btn btn-primary">
+        <div class="my-3">
+            {% if request.user == question.author %}
+            <a href="{% url 'pybo:question_modify' question.id  %}" 
+                class="btn btn-sm btn-warning">질문 수정</a>
+            <a href="#" data-uri="{% url 'pybo:question_delete' question.id  %}" 
+                class="delete btn btn-sm btn-danger">질문 삭제</a>
+            {% endif %}
+        </div>
+    </div>
+
+</div>
+{% endblock %}
+{% block script %}
+<script type='text/javascript'>
+const delete_elements = document.getElementsByClassName("delete");
+Array.from(delete_elements).forEach(function(element) {
+    element.addEventListener('click', function() {
+        if(confirm("정말로 삭제하시겠습니까?")) {
+            location.href = this.dataset.uri;
+        };
+    });
+});
+</script>
+{% endblock %}

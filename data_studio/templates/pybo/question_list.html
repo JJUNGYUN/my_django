@@ -10,6 +10,7 @@
             <tr class="table-dark">
                 <th>No</th>
                 <th>Title</th>
+                <th>author</th>
                 <th>Publish date</th>
             </tr>
         </thead>
@@ -20,7 +21,11 @@
                         <td>{{ question.id }}</td>
                         <td>
                             <a href="{% url 'pybo:detail' question.id %}">{{ question.subject }}</a>
+                            {% if question.answer_set.count > 0 %}
+                            <span class="text-danger small mx-2">{{question.answer_set.count}}</span>
+                            {% endif %}
                         </td>
+                        <td>{{ question.author }}</td>
                         <td>{{ question.create_date }}</td>
                     </tr>
                 {% endfor %}

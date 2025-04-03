@@ -404,13 +404,11 @@ samp {
 }
 
 pre {
-    display: block;
-    margin-top: 0;
-    margin-bottom: 1rem;
-    overflow: auto;
-    font-size: .875em
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em
 }
-
 pre code {
     font-size: inherit;
     color: inherit;
@@ -13891,4 +13889,10 @@ fieldset:disabled .btn {
     }
 }
 
+code,
+kbd,
+samp,
+
+
 /*# sourceMappingURL=bootstrap.min.css.map */
+
