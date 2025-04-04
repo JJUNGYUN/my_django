@@ -7,7 +7,7 @@ class LM_models(models.Model):
     name = models.CharField(max_length=128)
     parameter_size = models.CharField(max_length=64)
     weight_path = models.CharField(max_length=128)
-    tag = models.JSONField(default=list)
+    tag = models.CharField(max_length=512)
     file_size = models.CharField(max_length=64)
     create_date = models.DateTimeField()
     # 베이스 모델도 추가하고 싶어라
@@ -18,6 +18,7 @@ class LM_models(models.Model):
 """
 from models.models import LM_models
 from django.contrib.auth.models import User
+from django.utils import timezone
 
 users = User.objects.get(username="3548")
 
@@ -30,6 +31,6 @@ tag=["bert","nlp","encoder"], \
 file_size="420M", \
 create_date=timezone.now()\
 )
-
 q.save()
+
 """

@@ -1,44 +1,79 @@
 {% extends 'base.html' %}
 {% block content %}
 {% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+
+<head>
+    <title>{{ model.name }}</title>
+</head>
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
 
 <div class="container my-3">
     <div class="card-body border-bottom py-2">
         <div class="d-flex justify-content-between align-items-center">
             <!-- 제목 (왼쪽 정렬) -->
-            <h4 class="mb-0">{{ model.name }}</h4>
-            
+            <h4 class="mb-0 fw-bold">{{ model.name }}</h4>
             <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
             <h6 class="mb-0 text-muted">Author: {{ model.author }}</h6>
         </div>
+        <div class="mt-1 mb-1">
+            {% for tag in model.tag|split:"," %}
+            <a class="mb-1 mr-1 md:mb-1.5 md:mr-1.5 rounded-lg tag" >
+                {{tag}}
+            </a>
+            {% endfor %}
+        </div>
     </div>
-
-    <div class="card my-3">
-        <div class="card-body">
-            {% load static %}
-            <link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-                <div class="markdown card-text">
-                    {{ readme|mark|safe }}
+    <ul class="nav nav-tabs" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="readme-tab" data-bs-toggle="tab" data-bs-target="#readme" 
+                    type="button" role="tab" aria-controls="readme" aria-selected="true">
+                README.md
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#file_system" 
+                    type="button" role="tab" aria-controls="file_system" aria-selected="false">
+                Files
+            </button>
+        </li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane fade show active p-3 markdown" id="readme" role="tabpanel" aria-labelledby="readme-tab">
+            {{ readme|mark|safe }}
+        </div>
+        <div class="tab-pane fade p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab">
+            <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
+                <div class="mr-4 flex flex-none items-center truncate">
+                    <a class="hover:underline user-name fw-bold font-mono">{{ model.name }}</a>
                 </div>
-            <div class="d-flex justify-content-end">
-                <div class="badge bg-light text-dark p-2">
-                    {{ model.create_date}}
+                <div class="flex flex-none items-center truncate">
+                    <a class="hover:underline user-name text-gray-400 text-xs text-muted">{{ model.weight_path }}</a>
                 </div>
             </div>
+            <ul class="mb-8 rounded-b-lg border border-t-0 dark:border-gray-800 dark:bg-gray-900">
+                {% for file in file_list %}
+                <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
+                    <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
+                        {{file.file_type}}&nbsp;
+                        <span class="truncate">{{file.name}}</span>
+                    </a>
+                    <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
+                    <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
+                        <span class="truncate"> {{ file.size }} </span>
+                    </a> 
+                    <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
+                        <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
     </div>
 
-    <div class="d-flex justify-content-between align-items-center">
-        <input type="submit" value="답변등록" class="btn btn-primary">
-        <div class="my-3">
-            {% if request.user == question.author %}
-            <a href="{% url 'pybo:question_modify' question.id  %}" 
-                class="btn btn-sm btn-warning">질문 수정</a>
-            <a href="#" data-uri="{% url 'pybo:question_delete' question.id  %}" 
-                class="delete btn btn-sm btn-danger">질문 삭제</a>
-            {% endif %}
-        </div>
-    </div>
 
 </div>
 {% endblock %}

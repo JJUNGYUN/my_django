@@ -1,0 +1,83 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+<head>
+    <title>new model</title>
+</head>
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+
+<div class="container">
+    <h4 class="my-3 border-bottom pb-2">model registe</h4>
+    <form method="post" >
+        {% csrf_token %}
+        <!-- {{form.as_p}} -->
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for field in form %}
+            {% if field.errors %}
+            <div>
+                <strong>
+                    {{ field.label}}
+                </strong>
+                {{field.errors}}
+            </div>
+            {% endif %}
+            {% endfor %}        
+        </div>
+        {% endif %}
+        <div class="mb-3">
+            <label for="name" class="form-label">model_name</label>
+            <input type="text" class="form-control" name="name" id="name" value="{{form.name.value|default_if_none:''}}">
+        </div>
+        <div class="mb-3">
+            <label for="parameter_size" class="form-label">parameter_size</label>
+            <input type="text" class="form-control" name="parameter_size" id="parameter_size" value="{{form.parameter_size.value|default_if_none:''}}">
+        </div>
+        <div class="mb-3">
+            <label for="tag" class="form-label">tag (,로 구분!)</label>
+            <input type="text" class="form-control" name="tag" id="tag" value="{{form.tag.value|default_if_none:''|safe}}">
+        </div>
+        <div class="mb-3">
+            <label for="weight_path" class="form-label">weight_path</label>
+            <div class="mb-3 d-flex align-items-center gap-2">
+                <input type="text" class="form-control" name="weight_path" id="weight_path"
+                    value="{{ form.weight_path.value|default_if_none:'' }}">
+                <button type="submit" name="preview" value="true" class="btn btn-light">미리보기</button>
+            </div>
+        </div>
+        {% if file_list %}
+        <div class="tab-pane fade p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab"></div>
+            <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
+                <div class="flex flex-none items-center truncate">
+                    <a class="hover:underline user-name text-gray-400 text-xs text-muted">{{ model.weight_path }}</a>
+                </div>
+            </div>
+            <ul class="mb-8 rounded-b-lg border border-t-0 dark:border-gray-800 dark:bg-gray-900">
+                {% for file in file_list %}
+                <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
+                    <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
+                        {{file.file_type}}&nbsp;
+                        <span class="truncate">{{file.name}}</span>
+                    </a>
+                    <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
+                    <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
+                        <span class="truncate"> {{ file.size }} </span>
+                    </a> 
+                    <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
+                        <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
+                    </a>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endif %} 
+        <div class="mb-3 d-flex justify-content-center">
+            <button type="submit" name="save" class="mb-3 pb-2 btn btn-info">save</button>
+            <a href="{% url 'models:index' %}" class="mb-3 pb-2 btn btn-danger">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

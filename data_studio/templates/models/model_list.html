@@ -1,15 +1,17 @@
 {% extends 'base.html' %}
+
+{% load custom_filters %}
 {% load mathfilters %}
 {% block content %}
 
-<div class="card-columns">
+<div class="row row-cols-4 row-cols-md-6 g-3 my-1 mx-2">
     {% if models_list %}
         {% for model in models_list %}
-            <div class="card" style="width: 20rem;">
+            <div class="card my-1 mx-1 " style="width: 20rem;">
                 <div class="card-body">
                     <h4 class="card-title">{{ model.name }}</h4>
                     <h6 class="card-subtitle mb-2 text-muted">
-                        {% for tag in model.tag %}
+                        {% for tag in model.tag|split:"," %}
                             <div class="badge bg-light text-dark p-2">{{ tag }}</div>
                         {% endfor %}
                     </h6>                 
@@ -21,43 +23,45 @@
         <div>
             <h2 colspan="3">모델이 없습니다.</td>
         </div>
+        
     {% endif %}
-
-    <ul class="pagination justify-content-center position-fixed bottom-0 start-50 translate-middle-x bg-white shadow-sm p-2">
-        {% if model_list.has_previous %}
-            <li class="page_item">
-                <a class="page-link" href="?page={{model_list.previous_page_number}}">◀</a>
-            </li>
-        {% else %}
-            <li class="page_item disabled">
-                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
-            </li> 
-        {%endif%}
-
-        {% for page_number in model_list.paginator.page_range %}
-            {% if model_list.paginator.num_pages == 1 or page_number|add:-1|div:10|add:0 == model_list.number|add:-1|div:10|add:0 %}
-                {% if page_number == model_list.number %}
-                    <li class="page-item active" aria-current="page">
-                        <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
-                    </li>
-                {% else %}
-                    <li class="page-item">
-                        <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
-                    </li>
-                {% endif %}
-            {% endif %}
-        {% endfor %}
-
-        {% if model_list.has_next %}
-            <li class="page_item">
-                <a class="page-link" href="?page={{ model_list.next_page_number }}">▶</a>
-            </li>
-        {%else%}
-            <li class="page_item disabled">
-                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
-            </li> 
-        {%endif%}
-    </ul>
 </div><!-- end div card columns -->
+
+<a href="{% url 'models:new_model' %}" class="shadow-sm p-2 btn btn-primary mx-2">new_model</a>
+<ul class="pagination justify-content-center position-fixed bottom-0 start-50 translate-middle-x bg-white shadow-sm p-2">
+    {% if model_list.has_previous %}
+        <li class="page_item">
+            <a class="page-link" href="?page={{model_list.previous_page_number}}">◀</a>
+        </li>
+    {% else %}
+        <li class="page_item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
+        </li> 
+    {%endif%}
+
+    {% for page_number in model_list.paginator.page_range %}
+        {% if model_list.paginator.num_pages == 1 or page_number|add:-1|div:10|add:0 == model_list.number|add:-1|div:10|add:0 %}
+            {% if page_number == model_list.number %}
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if model_list.has_next %}
+        <li class="page_item">
+            <a class="page-link" href="?page={{ model_list.next_page_number }}">▶</a>
+        </li>
+    {%else%}
+        <li class="page_item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
+        </li> 
+    {%endif%}
+</ul>
 
 {% endblock content %}

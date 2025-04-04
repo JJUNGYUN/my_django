@@ -34,6 +34,7 @@ ALLOWED_HOSTS = []
 
 INSTALLED_APPS = [
     "markdownx",
+    "models.templatetags.custom_filters",
     "models.templatetags.markdown_extras",
     "mathfilters",
     'models.apps.ModelsConfig',
@@ -139,6 +140,6 @@ STATICFILES_DIRS =[
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = '/pybo/'
+LOGIN_REDIRECT_URL = '/'
 
 AUTH_PASSWORD_VALIDATORS = []
