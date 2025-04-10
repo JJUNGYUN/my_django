@@ -1,0 +1,200 @@
+{% block content %}
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+<!-- 정적 파일로 변경된 jQuery / jQuery UI 링크 -->
+<script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
+<script src="{% static 'dashboard/jquery-ui.min.js' %}"></script>
+
+
+<div class="container">
+  <main>
+    
+    <div class="py-5 text-center">
+      <img class="d-block mx-auto mb-4" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="" width="72" height="57">
+      <h2>평과 결과 추가</h2>
+      <p class="lead">평과 결과 추가 합시다</p>
+    </div>
+    
+    <div class="row">
+      <div class="">
+        
+        <form class="needs-validation"
+        action="{% url 'model_dashboard:add_eval_result' benchmark.id %}"
+        method="post"
+        enctype="multipart/form-data"  <!-- ✅ 여기에 추가 -->
+        novalidate>
+  
+    {% include "form_errors.html" %}
+    {% csrf_token %}
+    <div class="row g-3">
+  
+      <input type="hidden" value="{{benchmark.benchmark_name}}" id="benchmark_name" name="benchmark_name" class="form-control" required>
+  
+      <div class="col-sm-12">
+        <label for="model_name" value="{{ form.model_name.value|default_if_none:'' }}" class="form-label">모델 이름 </label>
+        <input type="text" id="model_name" name="model_name" class="form-control" placeholder="모델 탭의 데이터와 연동" required>
+        <div class="invalid-feedback">
+          모델 탭의 모델을 입력해주세요
+        </div>
+      </div>
+  
+      <!-- ✅ JSON 업로드 input 추가 -->
+      <div class="col-12">
+        <label for="json_file" class="form-label">JSON 파일 업로드 (Optional)</label>
+        <input type="file" class="form-control" id="json_file" name="json_file" accept=".json" autocomplete="off">
+        <div class="form-text">
+          파일을 업로드하면 아래 텍스트 입력보다 우선 적용됩니다.
+        </div>
+      </div>
+  
+      <!-- 기존 textarea -->
+      <div class="col-12">
+        <label for="dataset" class="form-label">샘플 데이터<span class="text-muted">(Optional)</span></label>
+        <textarea class="form-control" rows="5" id="evaluate_result" name="evaluate_result" placeholder='모든 데이터는 1단계 딕셔너리 형태여야 합니다. 예: {&quot;1&quot;: {&quot;입력&quot;: &quot;1+1=&quot;, &quot;출력&quot;: &quot;2&quot;}} 또는 [{&quot;입력&quot;: &quot;1+1=&quot;, &quot;출력&quot;: &quot;2&quot;}]'
+        >{{ evaluate_result | default_if_none:'' }}</textarea>
+        <div class="invalid-feedback">
+          결과 데이터를 json 형식으로 넣어주세요
+        </div>
+      </div>
+  
+      <hr class="my-4">
+  
+      <div class="col-12">
+        <label for="metrics-input" class="form-label">Metrics</label>
+        {% for head in headers %}
+          <div class="input-group mb-2">
+            <span class="input-group-text w-25 justify-content-center">{{head}}</span>
+            <input type="text" id="score" value="{{ scores|get_item:head }}" name="{{head}}_score" class="form-control" placeholder="Enter {{head}} value" autocomplete="off"/>
+          </div>
+        {% endfor %}
+      </div>
+  
+      <hr class="my-4">
+  
+      <button class="w-100 btn btn-sm" type="submit">등록</button>
+    </div>
+  </form>
+  
+      </div>
+    </div>
+  </main>
+
+  <footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1">&copy; Kelson</p>
+  </footer>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+    (function () {
+    'use strict'
+
+    // Fetch all the forms we want to apply custom Bootstrap validation styles to
+    var forms = document.querySelectorAll('.needs-validation')
+
+    // Loop over them and prevent submission
+    Array.prototype.slice.call(forms)
+        .forEach(function (form) {
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+            event.preventDefault()
+            event.stopPropagation()
+            }
+
+            form.classList.add('was-validated')
+        }, false)
+        })
+    })()
+
+    $(function() {
+        $("#dataset-input").autocomplete({
+            source: "{% url 'model_dashboard:dataset_autocomplete' %}",
+            minLength: 2,
+            select: function(event, ui) {
+                $("#dataset-input").val(ui.item.value);
+                return false;
+            }
+        });
+    });
+
+    $(function() {
+        $("#model-input").autocomplete({
+            source: "{% url 'model_dashboard:model_autocomplete' %}",
+            minLength: 2,
+            select: function(event, ui) {
+                $("#model-input").val(ui.item.value);
+                return false;
+            }
+        });
+    });
+
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("metrics-input");
+    const addBtn = document.getElementById("add-metric-btn");
+    const list = document.getElementById("metrics-list");
+
+    const addedMetrics = new Set();  // 중복 방지
+
+    addBtn.addEventListener("click", function () {
+      const metric = input.value.trim();
+
+      if (!metric) {
+        input.classList.add("is-invalid");
+        return;
+      }
+
+      if (addedMetrics.has(metric.toLowerCase())) {
+        input.value = "";
+        return;
+      }
+
+      // 텍스트 박스 생성
+      const wrapper = document.createElement("div");
+      wrapper.className = "badge bg-secondary p-2 d-flex align-items-center";
+      wrapper.style.gap = "8px";
+
+      const span = document.createElement("span");
+      span.textContent = metric;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "btn btn-sm btn-close btn-close-white ms-2";
+      removeBtn.type = "button";
+
+      // 삭제 시 리스트에서 제거
+      removeBtn.onclick = function () {
+        list.removeChild(wrapper);
+        addedMetrics.delete(metric.toLowerCase());
+
+        // 히든 input도 제거
+        const hiddenInput = document.querySelector(`input[type="hidden"][value="${metric}"]`);
+        if (hiddenInput) hiddenInput.remove();
+      };
+
+      wrapper.appendChild(span);
+      wrapper.appendChild(removeBtn);
+      list.appendChild(wrapper);
+
+      // 히든 input 추가 (form 전송용)
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "metrics[]";
+      hidden.value = metric;
+      list.appendChild(hidden);
+
+      addedMetrics.add(metric.toLowerCase());
+      input.value = "";
+      input.classList.remove("is-invalid");
+    });
+  });
+</script>
+{% endblock %}

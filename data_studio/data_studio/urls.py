@@ -23,5 +23,7 @@ urlpatterns = [
     path('pybo/', include('pybo.urls')),
     path('common/',include('common.urls')),
     path('models/',include('models.urls')),
+    path('datasets_repo/',include('datasets_repo.urls')),
+    path('model_dashboard/', include(('model_dashboard.urls', 'model_dashboard'), namespace='model_dashboard')),
     path('', views.index, name='index'),
 ]

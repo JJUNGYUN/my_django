@@ -1,0 +1,179 @@
+{% extends 'base.html' %}
+
+{% block content %}
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+<!-- 정적 파일로 변경된 jQuery / jQuery UI 링크 -->
+<script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
+<script src="{% static 'dashboard/jquery-ui.min.js' %}"></script>
+
+
+<div class="container">
+  <main>
+    
+    <div class="py-5 text-center">
+      <img class="d-block mx-auto mb-4" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="" width="72" height="57">
+      <h2>새로운 대시보드</h2>
+      <p class="lead">새로운 대시보드를 만들어 봅시다</p>
+    </div>
+
+    <div class="row">
+      
+      <div class="">
+        <form class="needs-validation" novalidate method="post" >
+          {% include "form_errors.html" %}
+          {% csrf_token %}
+          <div class="row g-3">
+            <div class="col-sm-12">
+              <label for="benchmark_name" class="form-label">대시보드 이름</label>
+              <input type="text" class="form-control" id="benchmark_name" name="benchmark_name" placeholder="STT-eval" value="" required autocomplete="off">
+              <div class="invalid-feedback">
+                대시보드 이름을 적어주세요
+              </div>
+            </div>
+
+            <div class="col-sm-12">
+                <label for="dataset_name" class="form-label">데이터셋</label>
+                <input type="text" id="dataset-input" name="dataset_name" class="form-control" placeholder="데이터 셋 탭의 데이터와 연동" required>
+                <div class="invalid-feedback">
+                    데이터 셋 탭의 데이터를 입력해주세요
+                </div>
+            </div>
+
+            <div class="col-12">
+              <label for="tag" class="form-label">태그 (,로 구분!)<span class="text-muted">(Optional)</span></label>
+              <input type="text" class="form-control" id="tag" name="tag" placeholder="태그를 적어주세요 " required autocomplete="off">
+              <div class="invalid-feedback" >
+                태그 (,로 구분!)
+              </div>
+              
+            </div>
+
+          <hr class="my-4">
+
+          <div class="col-12">
+            <label for="metrics-input" class="form-label">Metrics</label>
+            <input type="text" class="form-control" id="metrics-input" placeholder="ROUGE, BLEU, Acc, etc..." />
+            <div class="invalid-feedback" autocomplete="off">
+              Metric을 하나 이상 작성해주세요
+            </div>
+            <button id="add-metric-btn" class="btn btn-sm mt-2" type="button">추가</button>
+          
+            <!-- Metric 리스트 박스 -->
+            <div id="metrics-list" class="mt-3 d-flex flex-wrap gap-2"></div>
+          </div>
+
+          <hr class="my-4">
+          <button class="w-100 btn btn-sm" type="submit">등록</button>
+        </form>
+      </div>
+    </div>
+  </main>
+
+  <footer class="my-5 pt-5 text-muted text-center text-small">
+    <p class="mb-1">&copy; 열심히 개발중입니다.</p>
+  </footer>
+</div>
+
+{% endblock %}
+
+{% block script %}
+<script>
+    // Example starter JavaScript for disabling form submissions if there are invalid fields
+(function () {
+  'use strict'
+
+  // Fetch all the forms we want to apply custom Bootstrap validation styles to
+  var forms = document.querySelectorAll('.needs-validation')
+
+  // Loop over them and prevent submission
+  Array.prototype.slice.call(forms)
+    .forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+
+        form.classList.add('was-validated')
+      }, false)
+    })
+})()
+
+$(function() {
+    $("#dataset-input").autocomplete({
+        source: "{% url 'model_dashboard:dataset_autocomplete' %}",
+        minLength: 2,
+        select: function(event, ui) {
+            $("#dataset-input").val(ui.item.value);
+            return false;
+        }
+    });
+});
+
+
+    document.addEventListener("DOMContentLoaded", function () {
+    const input = document.getElementById("metrics-input");
+    const addBtn = document.getElementById("add-metric-btn");
+    const list = document.getElementById("metrics-list");
+
+    const addedMetrics = new Set();  // 중복 방지
+
+    addBtn.addEventListener("click", function () {
+      const metric = input.value.trim();
+
+      if (!metric) {
+        input.classList.add("is-invalid");
+        return;
+      }
+
+      if (addedMetrics.has(metric.toLowerCase())) {
+        input.value = "";
+        return;
+      }
+
+      // 텍스트 박스 생성
+      const wrapper = document.createElement("div");
+      wrapper.className = "badge bg-secondary p-2 d-flex align-items-center";
+      wrapper.style.gap = "8px";
+
+      const span = document.createElement("span");
+      span.textContent = metric;
+
+      const removeBtn = document.createElement("button");
+      removeBtn.className = "btn btn-sm btn-close btn-close-white ms-2";
+      removeBtn.type = "button";
+
+      // 삭제 시 리스트에서 제거
+      removeBtn.onclick = function () {
+        list.removeChild(wrapper);
+        addedMetrics.delete(metric.toLowerCase());
+
+        // 히든 input도 제거
+        const hiddenInput = document.querySelector(`input[type="hidden"][value="${metric}"]`);
+        if (hiddenInput) hiddenInput.remove();
+      };
+
+      wrapper.appendChild(span);
+      wrapper.appendChild(removeBtn);
+      list.appendChild(wrapper);
+
+      // 히든 input 추가 (form 전송용)
+      const hidden = document.createElement("input");
+      hidden.type = "hidden";
+      hidden.name = "metrics[]";
+      hidden.value = metric;
+      list.appendChild(hidden);
+
+      addedMetrics.add(metric.toLowerCase());
+      input.value = "";
+      input.classList.remove("is-invalid");
+    });
+  });
+</script>
+{% endblock %}

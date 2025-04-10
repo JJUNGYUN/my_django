@@ -21,4 +21,5 @@ def get_file_info_from_dir(directory_path):
                     'size': f"{file_size} MB",
                     'modified': modified_time
                 })
+                
     return file_info_list

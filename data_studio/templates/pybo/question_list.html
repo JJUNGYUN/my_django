@@ -31,49 +31,58 @@
                 {% endfor %}
             {% else %}
                 <tr>
-                    <td colspan="3">질문이 없습니다.</td>
+                    <td colspan="3">글이 없습니다.</td>
                 </tr>
             {% endif %}
         </tbody>
     </table>
 
-    <ul class="pagination justify-content-centor">
-        {% if question_list.has_previous %}
-            <li class="page_item">
-                <a class="page-link" href="?page={{question_list.previous_page_number}}">◀</a>
-            </li>
-        {% else %}
-            <li class="page_item disabled">
-                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
-            </li> 
-        {%endif%}
+    <!-- 중앙 하단 고정 스타일 -->
+    <div class="position-fixed bottom-0 start-50 translate-middle-x mb-3">
+        <ul class="pagination justify-content-center mb-2">
+            {% if question_list.has_previous %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{question_list.previous_page_number}}">◀</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
+                </li>
+            {% endif %}
 
-        {% for page_number in question_list.paginator.page_range%}
-            {% if page_number|add:-1|div:10|add:0 == question_list.number|add:-1|div:10|add:0 %}
-                {% if page_number == question_list.number %}
-                    <li class="page-item active" aria-current="page">
-                        <a class="page-link" href="?page={{page_number}}">{{page_number}}</a>
-                    </li>
-                {%else%}
-                    <li class="page_item">
-                        <a class="page-link" href="?page={{page_number}}">{{page_number}}</a>
-                    </li>
-                {%endif%}
-            {%endif%}
-        {%endfor%}
+            {% for page_number in question_list.paginator.page_range %}
+                {% if page_number|add:-1|div:10|add:0 == question_list.number|add:-1|div:10|add:0 %}
+                    {% if page_number == question_list.number %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                        </li>
+                    {% endif %}
+                {% endif %}
+            {% endfor %}
 
-        {% if question_list.has_next %}
-            <li class="page_item">
-                <a class="page-link" href="?page={{ question_list.next_page_number }}">▶</a>
-            </li>
-        {%else%}
-            <li class="page_item disabled">
-                <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
-            </li> 
-        {%endif%}
-    </ul>
-    <a href="{% url 'pybo:question_create' %}" class="btn btn-primary">create question</a>
+            {% if question_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ question_list.next_page_number }}">▶</a>
+                </li>
+            {% else %}
+                <li class="page-item disabled">
+                    <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
+                </li>
+            {% endif %}
+        </ul>
+
+        <div class="d-flex justify-content-center">
+            <a href="{% url 'pybo:question_create' %}" class="btn btn-primary">create question</a>
+        </div>
+    </div>
+
 </div>
+
+
 
 {% endblock %}
 

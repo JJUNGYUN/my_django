@@ -6,6 +6,8 @@ app_name = 'models'
 
 urlpatterns = [
     path('', views.index, name='index'),
-    path('<int:question_id>/', views.detail, name='detail'),
+    path('<int:model_id>/', views.detail, name='detail'),
     path('new_model/', views.new_model, name='new_model'),
+    path('models/modify/<int:model_id>', views.model_modify, name='model_modify'),
+    path('models/delete/<int:model_id>', views.model_delete, name='model_delete'),
 ]

@@ -1,5 +1,4 @@
 {% extends 'base.html' %}
-{% load custom_filters %}
 {% block content %}
 
 <head>
@@ -29,22 +28,22 @@
         </div>
         {% endif %}
         <div class="mb-3">
-            <label for="name" class="form-label">model_name</label>
-            <input type="text" class="form-control" name="name" id="name" value="{{form.name.value|default_if_none:''}}">
+            <label for="name" class="form-label">모델 이름</label>
+            <input type="text" class="form-control" name="name" id="name" value="{{form.name.value|default_if_none:''}}" autocomplete="off">
         </div>
         <div class="mb-3">
-            <label for="parameter_size" class="form-label">parameter_size</label>
-            <input type="text" class="form-control" name="parameter_size" id="parameter_size" value="{{form.parameter_size.value|default_if_none:''}}">
+            <label for="parameter_size" class="form-label">파라메터 사이즈(110M, 10B etc...)</label>
+            <input type="text" class="form-control" name="parameter_size" id="parameter_size" value="{{form.parameter_size.value|default_if_none:''}}" autocomplete="off">
         </div>
         <div class="mb-3">
-            <label for="tag" class="form-label">tag (,로 구분!)</label>
-            <input type="text" class="form-control" name="tag" id="tag" value="{{form.tag.value|default_if_none:''|safe}}">
+            <label for="tag" class="form-label">태그 (,로 구분!)</label>
+            <input type="text" class="form-control" name="tag" id="tag" value="{{form.tag.value|default_if_none:''|safe}}" autocomplete="off">
         </div>
         <div class="mb-3">
-            <label for="weight_path" class="form-label">weight_path</label>
+            <label for="weight_path" class="form-label">모델 경로 (README.md 가 있는 경로면 좋아요!)</label>
             <div class="mb-3 d-flex align-items-center gap-2">
                 <input type="text" class="form-control" name="weight_path" id="weight_path"
-                    value="{{ form.weight_path.value|default_if_none:'' }}">
+                    value="{{ form.weight_path.value|default_if_none:'' }}" autocomplete="off">
                 <button type="submit" name="preview" value="true" class="btn btn-light">미리보기</button>
             </div>
         </div>

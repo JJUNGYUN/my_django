@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %}
+{% load mathfilters %}
+{% block content %}
+
+<form method="get" action="" class="mb-3 d-flex justify-content-end me-3">
+    <input type="text" name="q" class="form-control w-25 me-2" placeholder="데이터셋 이름 검색" value="{{ q }}">
+    <button type="submit" class="btn btn-outline-primary me-2">검색</button>
+    {% if q %}
+        <a href="{% url 'model_dashboard:index' %}" class="btn btn-outline-secondary">초기화</a>
+    {% endif %}
+</form>
+
+<div class="row row-cols-4 row-cols-md-6 g-3 my-1 mx-2">
+    
+    <div class="card my-1 mx-1 d-flex justify-content-center align-items-center" style="width: 20rem; height: 12rem;">
+        <div class="card-body d-flex justify-content-center align-items-center">
+            <a href="{% url 'model_dashboard:new_dashboard' %}" class="text-truncate stretched-link text-decoration-none" style="font-size: 4rem; font-weight: bold;">
+                +
+            </a>
+        </div>
+    </div>
+    
+    {% if benchmark_list %}
+        {% for benchmark in benchmark_list %}
+            <div class="card my-1 mx-1 " style="width: 20rem;">
+                <div class="card-body">
+                    <h4 class="card-title">{{ benchmark.benchmark_name }}</h4>
+                    <h6 class="card-subtitle mb-2 text-muted">
+                        {% for tag in benchmark.tag|split:"," %}
+                            <div class="badge bg-light text-dark p-2">{{ tag }}</div>
+                        {% endfor %}
+                    </h6>                 
+                    <a href="{% url 'model_dashboard:detail' benchmark.id %}" class="btn btn-primary stretched-link">상세 페이지</a>
+                </div>
+            </div>
+        {% endfor %}
+    {% endif %}
+</div><!-- end div card columns -->
+<ul class="pagination justify-content-center position-fixed bottom-0 start-50 translate-middle-x bg-white shadow-sm p-2">
+    {% if benchmark_list.has_previous %}
+        <li class="page_item">
+            <a class="page-link" href="?page={{benchmark_list.previous_page_number}}">◀</a>
+        </li>
+    {% else %}
+        <li class="page_item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">◀</a>
+        </li> 
+    {%endif%}
+
+    
+    {% for page_number in benchmark_list.paginator.page_range %}
+        {% if benchmark_list.paginator.num_pages == 1 or page_number|add:-1|div:20|add:0 == benchmark_list.number|add:-1|div:20|add:0 %}
+            {% if page_number == benchmark_list.number %}
+                <li class="page-item active" aria-current="page">
+                    <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                </li>
+            {% else %}
+                <li class="page-item">
+                    <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
+                </li>
+            {% endif %}
+        {% endif %}
+    {% endfor %}
+
+    {% if benchmark_list.has_next %}
+        <li class="page_item">
+            <a class="page-link" href="?page={{ benchmark_list.next_page_number }}">▶</a>
+        </li>
+    {%else%}
+        <li class="page_item disabled">
+            <a class="page-link" tabindex="-1" aria-disabled="true" href="#">▶</a>
+        </li> 
+    {%endif%}
+</ul>
+
+{% endblock content %}

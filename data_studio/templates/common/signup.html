@@ -5,6 +5,11 @@
         {% csrf_token %}
         {% include "form_errors.html" %}
         <div class="mb-3">
+            <label for="username">이름</label>
+            <input type="text" class="form-control" name="first_name" id="first_name"
+                   value="{{ form.first_name.value|default_if_none:'' }}">
+        </div>
+        <div class="mb-3">
             <label for="username">Id</label>
             <input type="text" class="form-control" name="username" id="username"
                    value="{{ form.username.value|default_if_none:'' }}">

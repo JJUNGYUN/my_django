@@ -4,7 +4,30 @@
 {% load mathfilters %}
 {% block content %}
 
+<form method="get" action="" class="mb-3 d-flex justify-content-end me-3">
+    <select name="filter" class="form-select w-auto me-2">
+        <option value="all" {% if filter == 'all' %}selected{% endif %}>전체</option>
+        <option value="title" {% if filter == 'title' %}selected{% endif %}>제목</option>
+        <option value="tag" {% if filter == 'tag' %}selected{% endif %}>태그</option>
+        <option value="author" {% if filter == 'author' %}selected{% endif %}>작성자</option>
+    </select>
+
+    <input type="text" name="q" class="form-control w-25 me-2" placeholder="검색어 입력" value="{{ q }}">
+    <button type="submit" class="btn btn-outline-primary me-2">검색</button>
+    {% if q %}
+        <a href="{% url 'models:index' %}" class="btn btn-outline-secondary">초기화</a>
+    {% endif %}
+</form>
+
 <div class="row row-cols-4 row-cols-md-6 g-3 my-1 mx-2">
+    
+    <div class="card my-1 mx-1 d-flex justify-content-center align-items-center" style="width: 20rem; height: 12rem;">
+        <div class="card-body d-flex justify-content-center align-items-center">
+            <a href="{% url 'models:new_model' %}" class="text-truncate stretched-link text-decoration-none" style="font-size: 4rem; font-weight: bold;">
+                +
+            </a>
+        </div>
+    </div>
     {% if models_list %}
         {% for model in models_list %}
             <div class="card my-1 mx-1 " style="width: 20rem;">
@@ -15,23 +38,19 @@
                             <div class="badge bg-light text-dark p-2">{{ tag }}</div>
                         {% endfor %}
                     </h6>                 
-                    <a href="{% url 'models:detail' model.id %}" class="btn btn-primary stretched-link">More view</a>
+                    <a href="{% url 'models:detail' model.id %}" class="btn btn-primary stretched-link">상세 페이지</a>
                 </div>
             </div>
         {% endfor %}
-    {% else %}
-        <div>
-            <h2 colspan="3">모델이 없습니다.</td>
-        </div>
         
     {% endif %}
 </div><!-- end div card columns -->
 
-<a href="{% url 'models:new_model' %}" class="shadow-sm p-2 btn btn-primary mx-2">new_model</a>
+
 <ul class="pagination justify-content-center position-fixed bottom-0 start-50 translate-middle-x bg-white shadow-sm p-2">
-    {% if model_list.has_previous %}
+    {% if models_list.has_previous %}
         <li class="page_item">
-            <a class="page-link" href="?page={{model_list.previous_page_number}}">◀</a>
+            <a class="page-link" href="?page={{models_list.previous_page_number}}">◀</a>
         </li>
     {% else %}
         <li class="page_item disabled">
@@ -39,9 +58,10 @@
         </li> 
     {%endif%}
 
-    {% for page_number in model_list.paginator.page_range %}
-        {% if model_list.paginator.num_pages == 1 or page_number|add:-1|div:10|add:0 == model_list.number|add:-1|div:10|add:0 %}
-            {% if page_number == model_list.number %}
+    
+    {% for page_number in models_list.paginator.page_range %}
+        {% if models_list.paginator.num_pages == 1 or page_number|add:-1|div:20|add:0 == models_list.number|add:-1|div:20|add:0 %}
+            {% if page_number == models_list.number %}
                 <li class="page-item active" aria-current="page">
                     <a class="page-link" href="?page={{ page_number }}">{{ page_number }}</a>
                 </li>
@@ -53,9 +73,9 @@
         {% endif %}
     {% endfor %}
 
-    {% if model_list.has_next %}
+    {% if models_list.has_next %}
         <li class="page_item">
-            <a class="page-link" href="?page={{ model_list.next_page_number }}">▶</a>
+            <a class="page-link" href="?page={{ models_list.next_page_number }}">▶</a>
         </li>
     {%else%}
         <li class="page_item disabled">

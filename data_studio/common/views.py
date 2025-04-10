@@ -12,11 +12,12 @@ def signup(request):
         form = UserForm(request.POST)
         if form.is_valid():
             form.save()
-            user_id = form.cleand_data.get('id')
-            raw_password = form.cleand_data.get("password1")
+            user_id = form.cleaned_data.get('id')
+            raw_password = form.cleaned_data.get("password1")
             user = authenticate(username=user_id, password=raw_password)
-            login(request, user)
-
+            # form.save()
+            if user is not None:
+                login(request, user)
             return redirect('index')
     else:
         form = UserForm()

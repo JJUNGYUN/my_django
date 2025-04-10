@@ -15,7 +15,13 @@
     <div class="card-body border-bottom py-2">
         <div class="d-flex justify-content-between align-items-center">
             <!-- 제목 (왼쪽 정렬) -->
-            <h4 class="mb-0 fw-bold">{{ model.name }}</h4>
+            <div class="d-flex">
+                <h4 class="mb-2 mr-2 fw-bold">{{ model.name }}</h4>
+                <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
+                <button onclick="copyHiddenValue('copy-value')" class="">
+                    <img class="mb-0" src="{% static 'svg/copy.svg' %}" alt="" width="10" height="10">
+                </button>
+            </div>
             <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
             <h6 class="mb-0 text-muted">Author: {{ model.author }}</h6>
         </div>
@@ -37,7 +43,7 @@
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#file_system" 
                     type="button" role="tab" aria-controls="file_system" aria-selected="false">
-                Files
+                파일 시스템
             </button>
         </li>
     </ul>
@@ -72,6 +78,17 @@
                 {% endfor %}
             </ul>
         </div>
+
+        <div class="d-flex justify-content-between align-items-center">
+            <div class="my-3">
+                {% if request.user == model.author %}
+                <a href="{% url 'models:model_modify' model.id  %}" 
+                   class="btn btn-sm btn-warning">수정</a>
+                <a href="#" data-uri="{% url 'models:model_delete' model.id  %}" 
+                   class="delete btn btn-sm btn-danger">삭제</a>
+                {% endif %}
+            </div>
+        </div>
     </div>
 
 
@@ -87,5 +104,11 @@ Array.from(delete_elements).forEach(function(element) {
         };
     });
 });
+function copyHiddenValue(id) {
+    const val = document.getElementById(id).value;
+    navigator.clipboard.writeText(val)
+        .then(() => alert("복사 완료!"));
+}
+</script>
 </script>
 {% endblock %}

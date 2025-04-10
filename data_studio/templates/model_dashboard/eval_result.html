@@ -1,0 +1,46 @@
+{% block content %}
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+
+<table class="w-full table-auto rounded-lg font-mono text-xs text-gray-900">
+    <thead class="shadow-xs sticky left-0 right-0 top-0 z-1 bg-white align-top">
+        
+        <tr class="space-y-54 h-full min-w-fit divide-x border-b text-left">
+            {% for key in sample_data.1.keys %}
+                <th class="h-full max-w-sm p-2 text-left  relative w-auto">
+                    <div class="flex h-full flex-col flex-nowrap justify-between">
+                        <div class="flex items-center justify-between">
+                            {{key}}
+                        </div>
+                    </div>
+                </th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody class="h-16 overflow-scroll">
+        {% for key, values in sample_data.items %}
+        <tr class="group cursor-pointer space-x-4 divide-x border-b outline-offset-[-2px] odd:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-925 dark:hover:bg-gray-850  " tabindex="0" data-row-idx="0">
+                {% for key, value in values.items %}
+                <td class="min-w-fit max-w-sm break-words p-2">
+                    <div x-data="{ expanded: false }" @click="expanded = !expanded" class="cursor-pointer">
+                        <div :class="expanded ? '' : 'line-clamp-2'">
+                            <div dir="auto">
+                                <span>
+                                    {{values|dict_get:key}}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </td>
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<script src="{% static 'cdn.min.js' %}"></script>
+{% endblock %}

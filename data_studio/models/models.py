@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 
 class LM_models(models.Model):
     author = models.ForeignKey(User, on_delete=models.CASCADE)
-    name = models.CharField(max_length=128)
+    name = models.CharField(unique=True,max_length=128)
     parameter_size = models.CharField(max_length=64)
     weight_path = models.CharField(max_length=128)
     tag = models.CharField(max_length=512)
@@ -27,7 +27,7 @@ author=users, \
 name="bert-base-uncased", \
 parameter_size="110M", \
 weight_path="/root/workspace/mystudio/Mydjango/model_repo/bert-base-uncased/", \
-tag=["bert","nlp","encoder"], \
+tag="bert,nlp,encoder", \
 file_size="420M", \
 create_date=timezone.now()\
 )
