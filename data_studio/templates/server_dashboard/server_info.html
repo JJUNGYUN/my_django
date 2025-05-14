@@ -3,131 +3,134 @@
 {% load mathfilters %}
 
 {% block head %}
-<link rel="stylesheet" href="{% static 'bootstrap.min.css' %}">
 {% endblock %}
 
 {% block content %}
-<div class="container-fluid text-center mt-4">
-    <div class="row">
-        <div class="col-sm-8">
-            <div class="card w-100" style="height: 30vh;">
-                <div class="card-body p-2 overflow-auto">
-                    <!-- 드롭다운 -->
-                    <div class="d-flex justify-content-between mb-0 py-0">
-                        <h4 style="outline: 2px solid #646464;">127.0.0.2</h4>
-                        <div class="mb-0">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-dark dropdown-toggle float-end" type="button"
-                                    id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                    server list
-                                </button>
-                                <ul class="dropdown-menu w-30" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="#">127.0.0.1</a></li>
-                                    <li><a class="dropdown-item" href="#">localhost</a></li>
-                                    <li><a class="dropdown-item" href="#">None</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 테이블 -->
-                    <table class="table table-striped mt-1" style="outline: 2px solid #646464;">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">CONTAINER ID</th>
-                                <th scope="col">IMAGE</th>
-                                <th scope="col">STATUS</th>
-                                <th scope="col">CREATED</th>
-                                <th scope="col">NAMES</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">1</th>
-                                <td>1d2bcd83ab69</td>
-                                <td>cd484474f5fe</td>
-                                <td>Up 2 days</td>
-                                <td>2 days ago</td>
-                                <td>test</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
+<div class="container-fluid mt-4">
+  <div class="row g-3">
+    <!-- 좌측 서버/컨테이너 카드 -->
+    <div class="col-sm-8">
+      <div class="label-card h-100">
+        <div class="card-body p-3 overflow-auto">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="m-0">127.0.0.2</h4>
+            <div class="dropdown">
+              <button class="hit-btn-outline-dark dropdown-toggle" 
+                      type="button" 
+                      id="serverDropdown" 
+                      data-bs-toggle="dropdown" 
+                      aria-expanded="false">
+                Server List
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="serverDropdown">
+                <li><a class="dropdown-item" href="#">127.0.0.1</a></li>
+                <li><a class="dropdown-item" href="#">localhost</a></li>
+                <li><a class="dropdown-item" href="#">None</a></li>
+              </ul>
             </div>
+          </div>
+          <table class="manager-table w-100">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>CONTAINER ID</th>
+                <th>IMAGE</th>
+                <th>STATUS</th>
+                <th>CREATED</th>
+                <th>NAMES</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>1d2bcd83ab69</td>
+                <td>cd484474f5fe</td>
+                <td>Up 2 days</td>
+                <td>2 days ago</td>
+                <td>test</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <!--  -->
-        <div class="col-sm-4">
-            <div class="card w-100" style="height: 30vh;">
-                <div class="card-body p-2 overflow-auto">
-                    <!-- 드롭다운 -->
-                    <div class="d-flex justify-content-between mb-0 py-0">
-                        <h4 style="outline: 2px solid #646464;">127.0.0.2</h4>
-                        <div class="mb-0">
-                            <div class="dropdown">
-                                <button class="btn btn-outline-dark dropdown-toggle float-end" type="button"
-                                    id="dropdownMenuButton" data-bs-toggle="dropdown" aria-expanded="false">
-                                    None
-                                </button>
-                                <ul class="dropdown-menu w-30" aria-labelledby="dropdownMenuButton">
-                                    <li><a class="dropdown-item" href="#">어떤</a></li>
-                                    <li><a class="dropdown-item" href="#">기능을</a></li>
-                                    <li><a class="dropdown-item" href="#">넣을까요~</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- 테이블 -->
-                    <table class="table table-striped mt-1" style="outline: 2px solid #646464;">
-                        <thead>
-                            <tr>
-                                <th scope="col">#</th>
-                                <th scope="col">무</th>
-                                <th scope="col">엇</th>
-                                <th scope="col">을</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr>
-                                <th scope="row">1</th>
-                                <td>넣</td>
-                                <td>을</td>
-                                <td>까</td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
-        </div>
+      </div>
     </div>
 
-    <div class="row py-2">
-        <div class="col-6">
-            <h4>📊 Disk Usage Overview</h4>
-            <div class="card w-100 p-2" style="height: 30vh;">
-                <div class="mb-3">
-                    <div class="d-flex justify-content-between">
-                        <strong>/tmp</strong>
-                        <span>5%</span>
-                    </div>
-                    <div class="progress" style="height: 25px;">
-                        <div class="progress-bar bg-success" role="progressbar" style="width: 20%;" aria-valuenow="20"
-                            aria-valuemin="0" aria-valuemax="100">
-                            31G / 63G
-                        </div>
-                    </div>
-                </div>
+    <!-- 우측 커스텀 기능 카드 -->
+    <div class="col-sm-4">
+      <div class="label-card h-100">
+        <div class="card-body p-3 overflow-auto">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="m-0">127.0.0.2</h4>
+            <div class="dropdown">
+              <button class="hit-btn-outline-dark dropdown-toggle" 
+                      type="button" 
+                      id="featureDropdown" 
+                      data-bs-toggle="dropdown" 
+                      aria-expanded="false">
+                Options
+              </button>
+              <ul class="dropdown-menu" aria-labelledby="featureDropdown">
+                <li><a class="dropdown-item" href="#">어떤</a></li>
+                <li><a class="dropdown-item" href="#">기능을</a></li>
+                <li><a class="dropdown-item" href="#">넣을까요~</a></li>
+              </ul>
             </div>
+          </div>
+          <table class="manager-table w-100">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>무</th>
+                <th>엇</th>
+                <th>을</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>1</td>
+                <td>넣</td>
+                <td>을</td>
+                <td>까</td>
+              </tr>
+            </tbody>
+          </table>
         </div>
-        <div class="col-6">
-            <h4 class="text-center">🖥️ GPU 사용량</h4>
-            <div class="card w-100 p-2" style="height: 30vh;">
-                <canvas id="gpu-usage" style="width: 100%; height: 100%;"></canvas>
-                
-              </div>
-        </div>
+      </div>
     </div>
-</div>
+  </div>
+
+  <div class="row g-3 mt-3">
+    <!-- 디스크 사용량 -->
+    <div class="col-md-6">
+      <h4>📊 Disk Usage Overview</h4>
+      <div class="label-card p-3" style="height:30vh;">
+        <div class="mb-3">
+          <div class="d-flex justify-content-between">
+            <strong>/tmp</strong>
+            <span>5%</span>
+          </div>
+          <div class="progress" style="height:25px;">
+            <div class="progress-bar bg-success"
+                 role="progressbar"
+                 style="width:20%;"
+                 aria-valuenow="20"
+                 aria-valuemin="0"
+                 aria-valuemax="100">
+              31G / 63G
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- GPU 사용량 차트 -->
+    <div class="col-md-6">
+      <h4 class="text-center">🖥️ GPU 사용량</h4>
+      <div class="label-card p-3" style="height:30vh;">
+        <canvas id="gpu-usage" style="width:100%; height:100%;"></canvas>
+      </div>
+    </div>
+  </div>
 </div>
 {% endblock %}
 
@@ -137,7 +140,7 @@
 fetch('/server_dashboard/gpu_info/')
   .then(res => res.json())
   .then(chartData => {
-    const config = {
+    new Chart(document.getElementById('gpu-usage'), {
       type: 'bar',
       data: {
         labels: chartData.labels,
@@ -145,33 +148,22 @@ fetch('/server_dashboard/gpu_info/')
           label: 'GPU Usage (%)',
           data: chartData.data,
           backgroundColor: chartData.backgroundColors,
-          borderColor: chartData.backgroundColors.map(c => c.replace('0.2', '1')),
+          borderColor: chartData.backgroundColors.map(c => c.replace('0.2','1')),
           borderWidth: 1
         }]
       },
       options: {
         responsive: true,
-        maintainAspectRatio: false, // 이 부분 추가
+        maintainAspectRatio: false,
         scales: {
           y: {
             beginAtZero: true,
-            ticks: {
-              stepSize: 10,
-              callback: function(value) {
-                return value + '%';
-              }
-            },
-            max: 100
+            max: 100,
+            ticks: { stepSize: 10, callback: v=>v+'%' }
           }
         }
       }
-    };
-
-    new Chart(document.getElementById('gpu-usage'), config);
+    });
   });
 </script>
-
-<!-- bootstrap.bundle.min.js만 로드 -->
-<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 {% endblock %}
-
