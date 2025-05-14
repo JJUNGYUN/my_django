@@ -8,84 +8,85 @@
     <title>{{ model.name }}</title>
 </head>
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+<link rel="stylesheet" href="{% static 'prism/prism-tomorrow.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 
 <div class="container my-3">
-    <div class="card-body border-bottom py-2">
-        <div class="d-flex justify-content-between align-items-center">
-            <!-- 제목 (왼쪽 정렬) -->
-            <div class="d-flex">
-                <h4 class="mb-2 mr-2 fw-bold">{{ model.name }}</h4>
-                <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
-                <button onclick="copyHiddenValue('copy-value')" class="">
-                    <img class="mb-0" src="{% static 'svg/copy.svg' %}" alt="" width="10" height="10">
-                </button>
-            </div>
-            <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
-            <h6 class="mb-0 text-muted">Author: {{ model.author }}</h6>
-        </div>
-        <div class="mt-1 mb-1">
-            {% for tag in model.tag|split:"," %}
-            <a class="mb-1 mr-1 md:mb-1.5 md:mr-1.5 rounded-lg tag" >
-                {{tag}}
-            </a>
-            {% endfor %}
-        </div>
-    </div>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="readme-tab" data-bs-toggle="tab" data-bs-target="#readme" 
-                    type="button" role="tab" aria-controls="readme" aria-selected="true">
-                README.md
+    <section class="section-header">
+        <div class="header-main">
+            <h1 class="entity-title">{{ model.name }}</h1>
+            <button class="copy-button" onclick="copyHiddenValue('copy-value')" aria-label="경로 복사">
+                <img src="{% static 'svg/copy.svg' %}" alt="Copy" width="16" height="16">
             </button>
+            <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
+        </div>
+        <div class="header-meta">
+            <div class="badge-group">
+                <span class="badge-pill">{{ model.task_type }}</span>
+                {% for tag in model.tag|split:"," %}
+                <span class="badge-pill">{{ tag }}</span>
+                {% endfor %}
+            </div>
+            <span class="meta-item">Author: {{ model.author }}</span>
+        </div>
+    </section>
+      
+    <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link active" id="readme-tab" data-bs-toggle="tab" href="#readme" role="tab"
+               aria-controls="readme" aria-selected="true">
+               📄 README.md
+            </a>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#file_system" 
-                    type="button" role="tab" aria-controls="file_system" aria-selected="false">
-                파일 시스템
-            </button>
+            <a class="nav-link" id="files-tab" data-bs-toggle="tab" href="#file_system" role="tab"
+               aria-controls="file_system" aria-selected="false">
+               📁 파일 시스템
+            </a>
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show active p-3 markdown" id="readme" role="tabpanel" aria-labelledby="readme-tab">
-            {{ readme|mark|safe }}
-        </div>
-        <div class="tab-pane fade p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab">
-            <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
-                <div class="mr-4 flex flex-none items-center truncate">
-                    <a class="hover:underline user-name fw-bold font-mono">{{ model.name }}</a>
-                </div>
-                <div class="flex flex-none items-center truncate">
-                    <a class="hover:underline user-name text-gray-400 text-xs text-muted">{{ model.weight_path }}</a>
+        <div class="tab-pane fade show active p-3 markdown position-relative"
+            style="overflow-y: auto; max-height: 70vh;" id="readme" role="tabpanel" aria-labelledby="readme-tab">
+
+            <!-- 보기 모드 -->
+            <div class="markdown-body" id="readme-view" style="padding-bottom: 60px;">
+                {{ readme|mark|safe }}
+            </div>
+
+            <!-- 수정 모드 (초기에 숨김) -->
+            <div id="readme-edit" style="display: none; padding-bottom: 60px;">
+                <textarea id="readme-textarea" class="form-control" rows="20"
+                    style="overflow-y: auto; resize: vertical; min-height: 400px;">{{ readme|escape }}</textarea>
+                <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="saveReadme({{ model.id }})">저장</button>
+                    <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">취소</button>
                 </div>
             </div>
-            <ul class="mb-8 rounded-b-lg border border-t-0 dark:border-gray-800 dark:bg-gray-900">
-                {% for file in file_list %}
-                <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
-                    <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
-                        {{file.file_type}}&nbsp;
-                        <span class="truncate">{{file.name}}</span>
-                    </a>
-                    <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
-                    <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
-                        <span class="truncate"> {{ file.size }} </span>
-                    </a> 
-                    <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
-                        <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
+
+
         </div>
 
+
+        <div class="tab-pane p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab">
+            <form method="post">
+                {% csrf_token %}
+                {% include "partials/file_system_viewr.html" %}
+            </form>
+        </div>
+
+
         <div class="d-flex justify-content-between align-items-center">
+            {% if request.user == model.author %}
+                <div class="position-sticky bottom-0" style="z-index: 10;">
+                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="editReadme()">README 수정</button>
+                </div>
+            {% endif %}
             <div class="my-3">
                 {% if request.user == model.author %}
-                <a href="{% url 'models:model_modify' model.id  %}" 
-                   class="btn btn-sm btn-warning">수정</a>
-                <a href="#" data-uri="{% url 'models:model_delete' model.id  %}" 
-                   class="delete btn btn-sm btn-danger">삭제</a>
+                <a href="{% url 'models:model_modify' model.id  %}" class="btn btn-sm btn-warning">수정</a>
+                <a href="#" data-uri="{% url 'models:model_delete' model.id  %}"
+                    class="delete btn btn-sm btn-danger">삭제</a>
                 {% endif %}
             </div>
         </div>
@@ -95,20 +96,117 @@
 </div>
 {% endblock %}
 {% block script %}
+<script src="{% static 'prism/prism.js' %}"></script>
+  <script src="{% static 'prism/components/prism-python.min.js' %}"></script>
+<script>
+    
+    function editReadme() {
+        document.getElementById("readme-view").style.display = "none";
+        document.getElementById("readme-edit").style.display = "block";
+    }
+
+    function cancelEdit() {
+        document.getElementById("readme-view").style.display = "block";
+        document.getElementById("readme-edit").style.display = "none";
+    }
+
+    function saveReadme(modelId) {
+        const content = document.getElementById("readme-textarea").value;
+
+        fetch(`/models/${modelId}/save_readme/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": getCookie("csrftoken"),
+            },
+            body: JSON.stringify({ readme: content }),
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    location.reload();  // 또는 readme-view 내용만 갱신해도 OK
+                } else {
+                    alert("저장 실패: " + data.error);
+                }
+            });
+    }
+
+    // CSRF 토큰 가져오기
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+</script>
+
+
 <script type='text/javascript'>
-const delete_elements = document.getElementsByClassName("delete");
-Array.from(delete_elements).forEach(function(element) {
-    element.addEventListener('click', function() {
-        if(confirm("정말로 삭제하시겠습니까?")) {
-            location.href = this.dataset.uri;
-        };
+    const delete_elements = document.getElementsByClassName("delete");
+    Array.from(delete_elements).forEach(function (element) {
+        element.addEventListener('click', function () {
+            if (confirm("정말로 삭제하시겠습니까?")) {
+                location.href = this.dataset.uri;
+            };
+        });
     });
-});
-function copyHiddenValue(id) {
-    const val = document.getElementById(id).value;
-    navigator.clipboard.writeText(val)
-        .then(() => alert("복사 완료!"));
-}
+    function copyHiddenValue(id) {
+        const val = document.getElementById(id).value;
+
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(val)
+                .then(() => alert("복사 완료!"))
+                .catch(err => {
+                    console.error("클립보드 복사 실패:", err);
+                    fallbackCopy(val);
+                });
+        } else {
+            fallbackCopy(val);  // 지원 안될 때 대체 방식
+        }
+    }
+
+    function fallbackCopy(text) {
+        const tempInput = document.createElement("textarea");
+        tempInput.value = text;
+        document.body.appendChild(tempInput);
+        tempInput.select();
+        try {
+            document.execCommand("copy");
+            alert("복사 완료! (fallback)");
+        } catch (err) {
+            alert("복사 실패 😢");
+        }
+        document.body.removeChild(tempInput);
+    }
+
+    window.copyHiddenValue = copyHiddenValue;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        // URL hash에 따라 탭 활성화
+        const hash = window.location.hash;
+        if (hash) {
+            const tabTrigger = document.querySelector(`a[href="${hash}"]`);
+            if (tabTrigger) {
+                new bootstrap.Tab(tabTrigger).show();
+            }
+        }
+
+        // 탭 클릭 시 hash 갱신
+        const tabLinks = document.querySelectorAll('a[data-bs-toggle="tab"]');
+        tabLinks.forEach(link => {
+            link.addEventListener('shown.bs.tab', function (event) {
+                history.replaceState(null, null, event.target.getAttribute('href'));
+            });
+        });
+    });
 </script>
 </script>
 {% endblock %}

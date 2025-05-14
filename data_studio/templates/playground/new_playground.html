@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<head>
+    <title>new model</title>
+</head>
+{% load static %}
+<script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
+<script src="{% static 'dashboard/jquery-ui.min.js' %}"></script>
+
+<div class="container">
+    <h4 class="my-3 border-bottom pb-2">model registe</h4>
+    <form method="post" >
+        
+        {% csrf_token %}
+        {% if form.errors %}
+        <div class="alert alert-danger" role="alert">
+            {% for field in form %}
+            {% if field.errors %}
+            <div>
+                <strong>
+                    {{ field.label}}
+                </strong>
+                {{field.errors}}
+            </div>
+            {% endif %}
+            {% endfor %}        
+        </div>
+        {% endif %}
+        <div class="mb-3">
+            <label for="llm_model" value="{{ form.name.value|default_if_none:'' }}" class="form-label">모델 이름 </label>
+            <input type="text" id="model-input" name="llm_model" class="form-control" placeholder="모델 탭의 데이터와 연동" required>
+            <div class="invalid-feedback">
+              모델 탭의 모델을 입력해주세요
+            </div>
+        </div>
+        <h4>추후 웹 개발을 진행한다면 사용 예쩡</h4>
+        <div class="btn-group" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="playtype" id="btnradio1" value="chat" autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="btnradio1">chat</label>
+        
+            <input type="radio" class="btn-check" name="playtype" id="btnradio2" value="completion" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio2">completion</label>
+        </div>
+        
+
+        <h4>추후 백엔드 개발을 진행한다면 사용 예정</h4>
+        <div class="btn-group2" role="group" aria-label="Basic radio toggle button group">
+            <input type="radio" class="btn-check" name="backends" id="btnradio3" value="vllm" autocomplete="off" checked>
+            <label class="btn btn-outline-primary" for="btnradio3">vllm</label>
+        
+            <input type="radio" class="btn-check" name="backends" id="btnradio4" value="transformers" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio4">transformers</label>
+
+            <input type="radio" class="btn-check" name="backends" id="btnradio5" value="미구현" autocomplete="off">
+            <label class="btn btn-outline-primary" for="btnradio5">미구현</label>
+        </div>
+
+
+        <div class="mb-3 d-flex justify-content-center">
+            <button type="submit" name="save" class="mb-3 pb-2 btn btn-info">save</button>
+            <a href="{% url 'playground:index' %}" class="mb-3 pb-2 btn btn-danger">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+
+{% block script %}
+<script>
+$(function() {
+    $("#model-input").autocomplete({
+        source: "{% url 'playground:model_autocomplete' %}",
+        minLength: 1,
+        select: function(event, ui) {
+            $("#model-input").val(ui.item.value);
+            return false;
+        }
+    });
+});
+</script>
+{% endblock %}

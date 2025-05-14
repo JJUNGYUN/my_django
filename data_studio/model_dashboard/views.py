@@ -6,15 +6,14 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_GET
 from django.http import JsonResponse
-
+from django.urls import reverse
+    
 from datasets_repo.models import Datasets
 from .form import dashboardForm, evalresultForm
 from .utils import get_readme
 from models.models import LM_models
 from .models import Benchmark, BenchmarkResult
 from collections import defaultdict
-import json
-import os 
 import json
 
 
@@ -33,8 +32,15 @@ def index(request):
 
     context = {
         'benchmark_list': page_obj,
-        'q': q,  # 템플릿에서 value 유지용
+        "q": request.GET.get("q", ""),
+        "reset_url": reverse('datasets:index'),
+        "filter_options": {
+            "all": "전체",
+            "title": "제목",
+            "owner": "작성자",
+        }
     }
+
     return render(request, 'model_dashboard/dashboard_list.html', context)
 
 def get_dashboard(request, benchmark_id):
@@ -119,63 +125,6 @@ def delete_dashboard(request, benchmark_id):
         return redirect('benchmark:dashboard',benchmark_id=Benchmark.id)
     benchmark.delete()
     return redirect('model_dashboard:index')
-
-# def add_eval_result(request, benchmark_id):
-#     if request.method == 'POST':
-#         form = evalresultForm(request.POST)
-#         model_name_str = request.POST.get('model_name')
-#         benchmark_name_str = request.POST.get('benchmark_name')
-#         if model_name_str != '':
-#             try:
-#                 model_obj = LM_models.objects.get(name=model_name_str)
-#             except LM_models.DoesNotExist:
-#                 form.add_error('model_name', '입력한 모델셋이 존재하지 않습니다.')
-#                 model_obj = None  # None 설정해서 후속 처리 가능하게
-        
-
-#         try:
-#             benchmark_obj = Benchmark.objects.get(benchmark_name=benchmark_name_str)
-#         except LM_models.DoesNotExist:
-#             form.add_error('benchmark', '입력한 모델이 존재하지 않습니다.')
-#             benchmark_obj = None  # None 설정해서 후속 처리 가능하게
-        
-
-#         if form.is_valid() and model_obj and benchmark_obj:
-#             BenchmarkResult.objects.filter(llm_model=model_obj, benchmark_name=benchmark_obj).delete()
-#             eval_result = form.save(commit=False)
-#             eval_result.llm_model = model_obj
-#             eval_result.benchmark_name = benchmark_obj
-#             scores = {
-#                 key.replace('_score', ''): value
-#                 for key, value in request.POST.items()
-#                 if key.endswith('_score') and value.strip() != ''
-#             }
-#             eval_result.metrics = scores
-#             # eval_result.evaluate_result = request.POST.get('evalute_resulte')
-#             eval_result.author = request.user
-#             eval_result.dataset_version = timezone.now()
-#             eval_result.save()
-#             return redirect('model_dashboard:detail',benchmark_id=benchmark_id)
-#         else:
-#             print("Form errors:", form.errors)
-
-#         dataset_obj = benchmark_obj.dataset_name
-#         readme = get_readme(dataset_obj)
-#         scores = {
-#                 key.replace('_score', ''): value
-#                 for key, value in request.POST.items()
-#                 if key.endswith('_score') and value.strip() != ''
-#             }
-#         print(scores)
-#         return render(request, 'model_dashboard/dashboard.html', {
-#             'form': form,
-#             'readme': readme,
-#             'benchmark': benchmark_obj,
-#             'headers': benchmark_obj.metrics,
-#             'evaluate_result': request.POST.get('evaluate_result'),
-#             'scores':scores, 
-#             'active_tab': 'add_eval_result',  # 👈 탭 상태 전달
-#         })
 
 import json
 

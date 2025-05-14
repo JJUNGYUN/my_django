@@ -19,11 +19,16 @@ from django.urls import path, include
 from models import views
 
 urlpatterns = [
+    path('', views.index, name='index'),
     path('admin/', admin.site.urls),
     path('pybo/', include('pybo.urls')),
     path('common/',include('common.urls')),
     path('models/',include('models.urls')),
+    path('label_studio/',include('label_studio.urls')),
     path('datasets_repo/',include('datasets_repo.urls')),
     path('model_dashboard/', include(('model_dashboard.urls', 'model_dashboard'), namespace='model_dashboard')),
-    path('', views.index, name='index'),
+    path('server_dashboard/', include('server_dashboard.urls')),
+    path('playground/', include(('playground.urls', 'playground'), namespace= 'playground')),
+    
+    
 ]

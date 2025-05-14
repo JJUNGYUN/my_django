@@ -1,0 +1,222 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+
+{% block content %}
+<style>
+  /* 트리뷰 스타일 */
+  .hier-tree ul {
+    list-style: none;
+    margin: 0;
+    padding-left: 1rem;
+  }
+  .hier-tree ul.d-none { display: none; }
+  .hier-tree span.node {
+    cursor: pointer;
+    display: inline-block;
+    padding: 2px 4px;
+    border-radius: 4px;
+  }
+  .hier-tree span.node.selected {
+    background-color: #cfe2ff;
+  }
+  .hier-tree span.node.parent {
+    font-weight: 600;
+  }
+</style>
+
+<div class="container py-4">
+  <!-- 진행도 카드 -->
+  <div class="label-card mb-4">
+    <div class="label-card-body d-flex justify-content-between align-items-center">
+      <div>
+        <h5 class="mb-1 text-primary">{{ project.title }} 계층적 분류 작업</h5>
+        <small class="text-muted">
+          현재 위치: <strong>{{ current_index }}</strong> / {{ total_inputs }}
+        </small>
+      </div>
+      <div style="width:35%;">
+        <div class="d-flex align-items-center mb-1">
+          <span class="me-2 text-muted">진행도:</span>
+          <strong>{{ progress }}%</strong>
+        </div>
+        <div class="progress" style="height:8px;">
+          <div class="progress-bar bg-success"
+               role="progressbar"
+               style="width:{{ progress }}%;"
+               aria-valuenow="{{ progress }}"
+               aria-valuemin="0"
+               aria-valuemax="100">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <form id="hierForm"
+        method="post"
+        action="{% url 'label_studio:submit_work' project.id %}">
+    {% csrf_token %}
+    <input type="hidden" name="input_id" value="{{ input_data.id }}">
+    <input type="hidden" name="data_order" id="data_order">
+    <input type="hidden" name="path" id="pathInput">
+
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        <div class="label-card shadow-sm">
+          <!-- 헤더 -->
+          <div class="label-card-header text-white">
+            <h5 class="mb-0">작업 {{ current_index }} / {{ total_inputs }}</h5>
+          </div>
+
+          <!-- 바디 -->
+          <div class="label-card-body">
+            <!-- 입력 보기 -->
+            <div class="accordion mb-4" id="ioAccordion">
+              <div class="accordion-item">
+                <h2 class="accordion-header" id="hInput">
+                  <button class="accordion-button" type="button"
+                          data-bs-toggle="collapse"
+                          data-bs-target="#cInput"
+                          aria-expanded="true"
+                          aria-controls="cInput">
+                    입력 데이터
+                  </button>
+                </h2>
+                <div id="cInput"
+                     class="accordion-collapse collapse show"
+                     aria-labelledby="hInput">
+                  <div class="accordion-body text-box-scroll">
+                    {{ input_data.data.input }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- 계층적 트리뷰 -->
+            <div id="hierarchy-tree" class="hier-tree mb-3"
+                 style="max-height:300px; overflow:auto; border:1px solid #dee2e6; padding:0.5rem;">
+            </div>
+
+            <!-- 선택한 경로 표시 -->
+            <div id="breadcrumb" class="mb-3 fst-italic text-secondary"></div>
+
+            <!-- 액션 버튼 -->
+            <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+              {% if current_index > 1 %}
+                <button type="button"
+                        class="btn hit-btn-outline-primary"
+                        onclick="submitAndGo({{ input_data.order|add:-1 }})">
+                  ← 이전
+                </button>
+              {% endif %}
+              <div class="d-flex gap-2">
+                {% if is_last_input %}
+                  <button type="button"
+                          class="btn hit-btn-solid-primary"
+                          onclick="submitAndGo({{ input_data.order }})">
+                    완료
+                  </button>
+                {% else %}
+                  <button type="button"
+                          class="btn hit-btn-outline-primary"
+                          onclick="submitAndGo({{ input_data.order|add:1 }})">
+                    다음 →
+                  </button>
+                {% endif %}
+              </div>
+            </div>
+
+          </div> <!-- /.label-card-body -->
+        </div> <!-- /.label-card -->
+      </div>
+    </div>
+  </form>
+</div>
+
+{{ hierarchy|json_script:"hier-data" }}
+<script>
+  const data = JSON.parse(document.getElementById('hier-data').textContent);
+  const prevPath = {{ selected_path|default:"[]"|safe }};
+  const treeContainer = document.getElementById('hierarchy-tree');
+  const pathInput = document.getElementById('pathInput');
+  const breadcrumb = document.getElementById('breadcrumb');
+
+  // 브레드크럼 업데이트
+  function renderBreadcrumb(path) {
+    let names = [], items = data;
+    path.forEach(id => {
+      const node = items.find(n => n.id == id);
+      if (node) {
+        names.push(node.name);
+        items = node.children || [];
+      }
+    });
+    breadcrumb.textContent = names.join(' > ');
+  }
+
+  // 트리 빌드
+  function buildTree(nodes, parentPath = []) {
+    const ul = document.createElement('ul');
+    nodes.forEach(node => {
+      const li = document.createElement('li');
+      const span = document.createElement('span');
+      span.textContent = node.name;
+      span.className = 'node' + (node.children?.length ? ' parent' : '');
+
+      span.addEventListener('click', e => {
+        e.stopPropagation();
+        const next = span.nextElementSibling;
+        if (next && next.tagName === 'UL') {
+          next.classList.toggle('d-none');
+        } else if (!node.children?.length) {
+          const newPath = [...parentPath, node.id];
+          pathInput.value = JSON.stringify(newPath);
+          renderBreadcrumb(newPath);
+          treeContainer.querySelectorAll('span.selected')
+            .forEach(s => s.classList.remove('selected'));
+          span.classList.add('selected');
+        }
+      });
+
+      li.appendChild(span);
+
+      if (node.children?.length) {
+        const childUl = buildTree(node.children, [...parentPath, node.id]);
+        childUl.classList.add('d-none');
+        li.appendChild(childUl);
+      }
+
+      ul.appendChild(li);
+    });
+    return ul;
+  }
+
+  // 초기 렌더
+  treeContainer.appendChild(buildTree(data));
+
+  if (prevPath.length) {
+    pathInput.value = JSON.stringify(prevPath);
+    renderBreadcrumb(prevPath);
+    // 프리뷰하이라이트 및 펼침
+    let items = data;
+    prevPath.forEach(id => {
+      const span = Array.from(treeContainer.querySelectorAll('span.node'))
+        .find(s => s.textContent === items.find(n => n.id == id).name);
+      if (span) span.click();
+      const node = items.find(n => n.id == id);
+      items = node?.children || [];
+    });
+  }
+
+  // submitAndGo
+  function submitAndGo(targetOrder) {
+    document.getElementById('data_order').value = targetOrder;
+    const currentPath = JSON.parse(pathInput.value || '[]');
+    if (!currentPath.length) {
+      alert('⚠️ 분류할 경로를 클릭하여 선택해주세요.');
+      return;
+    }
+    document.getElementById('hierForm').submit();
+  }
+</script>
+{% endblock %}

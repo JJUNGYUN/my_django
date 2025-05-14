@@ -1,27 +1,33 @@
 {% load static %}
+
 <!doctype html>
 <html lang="ko">
 <head>
-    <!-- Required meta tags -->
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
     <!-- Bootstrap CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'bootstrap.min.css' %}">
-    <!-- pybo CSS -->
+    <!-- Custom CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
-    
+    <link rel="stylesheet" type="text/css" href="{% static 'markdown.css' %}">
+    <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 </head>
 <body>
-{% include "navbar.html" %}
 
-<!-- 기본 템플릿 안에 삽입될 내용 Start -->
-{% block content %}
-{% endblock %}
-<!-- 기본 템플릿 안에 삽입될 내용 End -->
-<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
-<!-- 자바스크립트 Start -->
+    <div class="d-flex" id="layout">
+        <!-- Sidebar -->
+        {% include "navbar.html" %}
+    
+        <!-- Main content -->
+        <div id="main-content" class="flex-grow-1 p-4 content-expanded">
+            {% block content %}{% endblock %}
+        </div>
+    </div>
+    
+
+
 {% block script %}
+
 {% endblock %}
-<!-- 자바스크립트 End -->
 </body>
 </html>

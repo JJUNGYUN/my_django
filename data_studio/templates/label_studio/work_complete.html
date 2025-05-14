@@ -1,0 +1,7 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container text-center py-5">
+    <h3 class="text-success">🎉 모든 작업이 완료되었습니다!</h3>
+    <a href="{% url 'label_studio:index' %}" class="btn btn-secondary mt-3">프로젝트 목록으로</a>
+</div>
+{% endblock %}

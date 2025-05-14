@@ -1,0 +1,15 @@
+<form method="get" action="{{ search_action|default:'' }}" class="mb-3 d-flex justify-content-end me-3">
+
+    <select name="filter" class="form-select w-auto me-2">
+        {% for key, label in filter_options.items %}
+            <option value="{{ key }}" {% if filter == key %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+
+    <input type="text" name="q" class="form-control w-25 me-2" placeholder="{{ placeholder|default:'검색어 입력' }}" value="{{ q }}">
+    <button type="submit" class="btn hit-btn-outline-primary me-2">검색</button>
+
+    {% if q %}
+        <a href="{{ reset_url }}" class="btn btn-outline-secondary">초기화</a>
+    {% endif %}
+</form>

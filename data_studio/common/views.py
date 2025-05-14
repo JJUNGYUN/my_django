@@ -1,6 +1,13 @@
 from django.contrib.auth import logout, authenticate, login
 from django.shortcuts import redirect, render
+from django.contrib.auth.decorators import login_required
+from django.db.models import Q
+
 from common.forms import UserForm
+from playground.models import Playground
+from models.models import LM_models
+from label_studio.models import Project
+from datasets_repo.models import Datasets
 
 # Create your views here.
 def logout_view(request):
@@ -23,3 +30,28 @@ def signup(request):
         form = UserForm()
     
     return render(request, 'common/signup.html',{'form':form})
+
+@login_required(login_url='common:login')
+def mypage(request):
+    user = request.user
+
+    playground_list = Playground.objects.filter(author=user) \
+                                        .order_by('-start_time')
+
+    llm_models_list = LM_models.objects.filter(author=user) \
+                                        .order_by('-create_date')
+
+    project_list = Project.objects.filter(
+        Q(owner=user) |
+        Q(assignments__worker=user)
+    ).distinct().order_by('-created_at')
+
+    datasets_list = Datasets.objects.filter(author=user) \
+                                     .order_by('-create_date')
+
+    return render(request, 'common/mypage.html', {
+        'playground_list': playground_list,
+        'models_list':    llm_models_list,
+        'project_list':   project_list,
+        'datasets_list':  datasets_list,
+    })

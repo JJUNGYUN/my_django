@@ -33,7 +33,10 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'label_studio.apps.LabelStudioConfig',
     "markdownx",
+    'playground.apps.PlaygroundConfig',
+    'server_dashboard.apps.ServerDashboardConfig',
     "models.templatetags.custom_filters",
     "models.templatetags.markdown_extras",
     "mathfilters",

@@ -1,0 +1,221 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% block content %}
+<div class="container py-4">
+
+    <!-- 1) 프로젝트 정보 카드 (읽기 전용) -->
+    <div class="label-card mb-4" style="font-size: 16px;">
+        <div class="label-card-header">
+            <h5 class="mb-0">{{ project.title }} (모니터링)</h5>
+        </div>
+        <div class="label-card-body">
+            <p><strong>설명:</strong> {{ project.description }}</p>
+            <p>
+                <strong>시작일:</strong> {{ project.start_date|date:"Y-m-d" }}&nbsp;
+                <strong>마감일:</strong> {{ project.end_date|date:"Y-m-d" }}&nbsp;
+                <strong>상태:</strong> {{ project.get_task_status_display }}
+            </p>
+        </div>
+            <!-- 2) 진행 현황 카드 -->
+        <div class="mb-4 mx-3">
+            <h5 class="mb-2">작업 진행률</h5>
+            <div class="progress"
+                style="
+                    height: 1.5rem;
+                    border-radius: 0.75rem;
+                    overflow: hidden;
+                    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2);
+                ">
+                {% with pct=completed|div:total|mul:100 %}
+                <div class="progress-bar progress-bar-striped progress-bar-animated"
+                    role="progressbar"
+                    style="width: {{ pct }}%;"
+                    aria-valuenow="{{ pct|floatformat:0 }}"
+                    aria-valuemin="0"
+                    aria-valuemax="100">
+                    <span class="fw-bold">
+                        {{ completed }} / {{ total }} ({{ pct|floatformat:0 }}%)
+                    </span>
+                </div>
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+
+
+    
+
+    <!-- 3) 작업 결과 & 남은 데이터 테이블 -->
+    <div class="mb-4">
+
+        <!-- 작업 결과 아코디언 (기본 접힘) -->
+        <div class="accordion mb-2" id="resultAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingResults">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseResults" aria-expanded="false" aria-controls="collapseResults">
+                        작업 결과
+                    </button>
+                </h2>
+                <div id="collapseResults" class="accordion-collapse collapse" aria-labelledby="headingResults"
+                    data-bs-parent="#resultAccordion">
+                    <div class="accordion-body p-0">
+                        <div style="max-height:300px; overflow-y:auto;">
+                            <table class="manager-table mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>작업자</th>
+                                        <th style="min-width:300px">내용</th>
+                                        <th>레이블/요약</th>
+                                        <th>제출일</th>
+                                        <th>작업하기</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for result in work_results %}
+                                    <tr class="expand-trigger" style="cursor:pointer;" >
+                                        <td>#{{ result.input_data.order }}</td>
+                                        <td>{{ result.worker.username }}</td>
+                                        <td class="text-truncate" style="max-width:300px;"
+                                            title="{{ result.input_data.data.input }}">
+                                            {% if project.task_type == "evaluation" %}
+                                            <span class="badge bg-info text-dark">in</span>
+                                            {{ result.input_data.data.input|truncatechars:50 }}<br>
+                                            <span class="badge bg-info text-dark">out</span>
+                                            {{ result.input_data.data.output|truncatechars:50 }}
+                                            {% elif project.task_type == "compare" %}
+                                            <span class="badge bg-info text-dark">in</span>
+                                            {{ result.input_data.data.input|truncatechars:50 }}<br>
+                                            <span class="badge bg-primary text-dark">A</span>
+                                            {{ result.input_data.data.output_a|truncatechars:50 }}<br>
+                                            <span class="badge bg-success text-dark">B</span>
+                                            {{ result.input_data.data.output_b|truncatechars:50 }}
+                                            {% else %}
+                                            {{ result.input_data.data.text|truncatechars:50 }}
+                                            {% endif %}
+                                        </td>
+                                        <td>
+                                            {% if project.task_type in "classification,compare" %}
+                                            {{ result.result.label }}
+                                            {% elif project.task_type == "evaluation" %}
+                                            <div class="d-flex flex-wrap gap-1">
+                                                {% for key,val in result.result.items %}
+                                                <span class="badge bg-primary-subtle text-dark">
+                                                    {{ key }}: <strong>{{ val }}</strong>
+                                                </span>
+                                                {% endfor %}
+                                            </div>
+                                            {% else %}
+                                            <span class="text-muted small">{{ result.result.summary }}</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ result.created_at|date:"Y-m-d" }}</td>
+                                        <td>
+                                            <a href="{% url 'label_studio:work_entry' project.id %}?data_order={{ result.input_data.order }}"
+                                                class="label-btn label-btn-primary btn-sm">
+                                                작업하기
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    <tr class="expand-content d-none">
+                                        <td colspan="6" class="bg-light p-3">
+                                            {% if project.task_type == "evaluation" %}
+                                            <p><strong>Input:</strong><br>{{ result.input_data.data.input|linebreaksbr
+                                                }}</p>
+                                            <p><strong>Output:</strong><br>{{ result.input_data.data.output|linebreaksbr
+                                                }}</p>
+                                            {% elif project.task_type == "compare" %}
+                                            <p><strong>Input:</strong><br>{{ result.input_data.data.input|linebreaksbr
+                                                }}</p>
+                                            <p><strong>A:</strong><br>{{ result.input_data.data.output_a|linebreaksbr }}
+                                            </p>
+                                            <p><strong>B:</strong><br>{{ result.input_data.data.output_b|linebreaksbr }}
+                                            </p>
+                                            {% else %}
+                                            <p><strong>Text:</strong><br>{{ result.input_data.data.text|linebreaksbr }}
+                                            </p>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="6" class="text-center">작업 결과가 없습니다.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- 3) 남은 작업 데이터 -->
+        <div class="accordion" id="remainingAccordion">
+            <div class="accordion-item">
+                <h2 class="accordion-header" id="headingRemaining">
+                    <button class="accordion-button" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#collapseRemaining" aria-expanded="true" aria-controls="collapseRemaining">
+                        남은 데이터 (아직 작업하지 않음)
+                    </button>
+                </h2>
+                <div id="collapseRemaining" class="accordion-collapse collapse show" aria-labelledby="headingRemaining"
+                    data-bs-parent="#remainingAccordion">
+                    <div class="accordion-body p-0">
+                        <div style="max-height:300px; overflow-y:auto;">
+                            <table class="manager-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>내용</th>
+                                        <th>작업 시작</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for inp in remaining_inputs %}
+                                    <tr>
+                                        <td>#{{ inp.order }}</td>
+                                        {% with txt=inp.data|dict_get:"text" inp=inp.data|dict_get:"input" %}
+                                        <td class="text-truncate"
+                                            title="{% if txt %}{{ txt }}{% else %}{{ inp }}{% endif %}">
+                                            {{ txt|default:inp|truncatechars:100 }}
+                                        </td>
+                                        {% endwith %}
+                                        <td>
+                                            <a href="{% url 'label_studio:work_entry' project.id %}?data_order={{ inp.order }}"
+                                                class="hit-btn-outline-primary btn-s">
+                                                시작
+                                            </a>
+                                        </td>
+                                    </tr>
+                                    {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-center">남은 데이터가 없습니다.</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* 1) 헤더와 일반 셀은 가운데 정렬 */
+    .manager-table th,
+    .manager-table td {
+      text-align: center;
+      vertical-align: middle;
+    }
+  
+    /* 2) 긴 텍스트용 셀(text-truncate 클래스)만 좌측 정렬 */
+    .manager-table td.text-truncate {
+      text-align: left;
+    }
+  </style>
+  
+{% endblock %}

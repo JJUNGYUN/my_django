@@ -1,103 +1,102 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block content %}
-<div class="container my-3">
-    <div class="card-body border-bottom py-2">
-        <div class="d-flex justify-content-between align-items-center">
-            <!-- 제목 (왼쪽 정렬) -->
-            <h4 class="mb-0">{{ question.subject }}</h4>
-            
-            <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
-            <h6 class="mb-0 text-muted">작성자: {{ question.author }}</h6>
-        </div>
+<div class="container py-4">
+
+  <!-- Question Header -->
+  <div class="label-card mb-4">
+    <div class="label-card-header text-white">
+      <div class="d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">{{ question.subject }}</h5>
+        <small class="text-light">작성자: {{ question.author }}</small>
+      </div>
     </div>
-    <div class="card my-3">
-        <div class="card-body">
-            <div class="card-text" style="white-space: pre-line;">
-                {{ question.content}}
-            </div>
-            <div class="d-flex justify-content-end">
-                <div class="badge bg-light text-dark p-2">
-                    {{ question.create_date}}
-                </div>
-            </div>
-        </div>
+    <div class="label-card-body">
+      <pre class="mb-2" style="white-space: pre-wrap; margin:0;">{{ question.content }}</pre>
+      <div class="text-end">
+        <small class="badge bg-light text-dark">🕒 {{ question.create_date|date:"Y-m-d H:i" }}</small>
+      </div>
     </div>
-    <h5 class="border-bottom my-2 py-2">{{ question.answer_set.count}}개의 응답이 있습니다.</h5>
-    
-    <form action="{% url 'pybo:answer_create' question.id %}" method="post" class="my-3">
+  </div>
+
+  <!-- Answer Count & New Answer Form -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h6 class="mb-0">{{ question.answer_set.count }}개의 응답</h6>
+    <button class="btn hit-btn-outline-primary btn-sm" type="button"
+            data-bs-toggle="collapse" data-bs-target="#answerFormCollapse"
+            aria-expanded="false">
+      ✍️ 답변 등록
+    </button>
+  </div>
+
+  <div class="collapse mb-4" id="answerFormCollapse">
+    <div class="label-card p-3">
+      <form method="post" action="{% url 'pybo:answer_create' question.id %}">
         {% csrf_token %}
         {% if form.errors %}
-        <div class="alert alert-danger" role="alert">
+          <div class="alert alert-danger">
             {% for field in form %}
-            {% if field.errors %}
-            <div>
-                <strong>{{ field.label }}</strong>
-                {{ field.errors}}
-            </div>
-            {% endif%}
-            {%endfor%}
+              {% for err in field.errors %}
+                <div><strong>{{ field.label }}:</strong> {{ err }}</div>
+              {% endfor %}
+            {% endfor %}
+          </div>
+        {% endif %}
+        <div class="mb-3">
+          <textarea name="content"
+                    class="form-control"
+                    rows="3"
+                    placeholder="답변을 입력하세요...">{{ form.content.value }}</textarea>
         </div>
-        {%endif%}
-        <div class="mb-3 d-flex">
-            <textarea name="content" id="content" class="form-control" rows="1"></textarea>
-            <input type="submit" value="답변등록" class="btn btn-primary">
+        <div class="text-end">
+          <button type="submit" class="btn hit-btn-solid-primary">답변 등록</button>
         </div>
-    </form>
-
-    <!-- toggle 버튼 -->
-    <button type="button" class="btn btn-outline-primary btn-sm mb-2"
-    data-bs-toggle="collapse" data-bs-target="#answerCollapse"
-    aria-expanded="false" aria-controls="answerCollapse_answer">
-    💬 댓글 보기 / 숨기기
-    </button>
-
-    <!-- 접히는 댓글 영역 -->
-    <div class="collapse" id="answerCollapse">
-        {% for answer in question.answer_set.all %}
-        <div class="card my-2 p-2">
-            <div class="d-flex justify-content-between align-items-center flex-wrap">
-                <div class="d-flex align-items-center text-muted fw-bold me-3">
-                    🙋 {{ answer.author }}
-                </div>
-                <div class="d-flex align-items-center flex-grow-1 text-break mx-2" style>
-                    {{ answer.content }}
-                </div>
-                <div class="d-flex align-items-center ms-auto">
-                    <div class="badge bg-light text-dark">
-                        🕒 {{ answer.create_date }}
-                    </div>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
+      </form>
     </div>
+  </div>
 
-
-    <div class="d-flex justify-content-between align-items-center">
-        
-        <div class="my-3">
-            {% if request.user == question.author %}
-            <a href="{% url 'pybo:question_modify' question.id  %}" 
-               class="btn btn-sm btn-warning">질문 수정</a>
-            <a href="#" data-uri="{% url 'pybo:question_delete' question.id  %}" 
-               class="delete btn btn-sm btn-danger">질문 삭제</a>
-            {% endif %}
+  <!-- Answers List -->
+  <button class="btn hit-btn-outline-primary btn-sm mb-2" type="button"
+          data-bs-toggle="collapse" data-bs-target="#answersCollapse"
+          aria-expanded="true">
+    💬 댓글 보기/숨기기
+  </button>
+  <div class="collapse show" id="answersCollapse">
+    {% for answer in question.answer_set.all %}
+      <div class="label-card mb-3">
+        <div class="label-card-body d-flex justify-content-between align-items-start flex-wrap">
+          <div class="flex-grow-1 mb-2">
+            <strong>🙋 {{ answer.author }}</strong><br>
+            <pre style="white-space: pre-wrap; margin:0;">{{ answer.content }}</pre>
+          </div>
+          <small class="text-muted">🕒 {{ answer.create_date|date:"Y-m-d H:i" }}</small>
         </div>
-    </div>
+      </div>
+    {% empty %}
+      <p class="text-center text-muted">등록된 답변이 없습니다.</p>
+    {% endfor %}
+  </div>
+
+  <!-- Edit/Delete Buttons -->
+  {% if request.user == question.author %}
+  <div class="d-flex gap-2 mt-4">
+    <a href="{% url 'pybo:question_modify' question.id %}" class="btn hit-btn-outline-primary">질문 수정</a>
+    <button class="btn hit-btn-solid-red delete" data-uri="{% url 'pybo:question_delete' question.id %}">질문 삭제</button>
+  </div>
+  {% endif %}
+
 </div>
 {% endblock %}
 
 {% block script %}
-
-<script type='text/javascript'>
-const delete_elements = document.getElementsByClassName("delete");
-Array.from(delete_elements).forEach(function(element) {
-    element.addEventListener('click', function() {
-        if(confirm("정말로 삭제하시겠습니까?")) {
-            location.href = this.dataset.uri;
-        };
+<script>
+  // delete confirmation
+  document.querySelectorAll('.delete').forEach(btn=>{
+    btn.addEventListener('click', ()=> {
+      if (confirm("정말 삭제하시겠습니까?")) {
+        location.href = btn.dataset.uri;
+      }
     });
-});
+  });
 </script>
 {% endblock %}

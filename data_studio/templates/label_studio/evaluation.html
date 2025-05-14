@@ -1,0 +1,229 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="container py-4">
+    <!-- 진행도 카드 -->
+    <div class="label-card mb-4">
+        <div class="label-card-body d-flex justify-content-between align-items-center">
+            <div>
+                <h5 class="mb-1 text-primary">{{ project.title }} 평가 작업</h5>
+                <small class="text-muted">현재 위치: <strong>{{ current_index }}</strong> / {{ total_inputs }}</small>
+            </div>
+            <div style="width: 35%;">
+                <div class="d-flex align-items-center mb-1">
+                    <span class="me-2 text-muted">진행도:</span>
+                    <strong>{{ progress }}%</strong>
+                </div>
+                <div class="progress" style="height: 8px;">
+                    <div class="progress-bar bg-success" role="progressbar"
+                         style="width: {{ progress }}%;"
+                         aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 평가 폼 시작 -->
+    <form id="evaluationForm"
+          method="post"
+          action="{% url 'label_studio:submit_work' project.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="input_id" value="{{ input_data.id }}">
+        <input type="hidden" name="data_order" id="data_order">
+
+        <div class="row justify-content-center">
+            <div class="col-md-8">
+                <div class="label-card shadow-sm">
+
+                    <!-- 카드 헤더 -->
+                    <div class="label-card-header text-white">
+                        <h5 class="mb-0">작업 {{ current_index }} / {{ total_inputs }}</h5>
+                    </div>
+
+                    <!-- 카드 바디 -->
+                    <div class="label-card-body">
+
+                        <!-- 입력/출력 아코디언 -->
+                        <div class="accordion mb-4" id="ioAccordion">
+                            <!-- Input -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="hInput">
+                                    <button class="accordion-button" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#cInput"
+                                            aria-expanded="true"
+                                            aria-controls="cInput">
+                                        입력 (Input)
+                                    </button>
+                                </h2>
+                                <div id="cInput"
+                                     class="accordion-collapse collapse show"
+                                     aria-labelledby="hInput">
+                                    <div class="accordion-body text-box-scroll">
+                                        {{ input_data.data.input }}
+                                    </div>
+                                </div>
+                            </div>
+                            <!-- Output -->
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="hOutput">
+                                    <button class="accordion-button text-primary" type="button"
+                                            data-bs-toggle="collapse"
+                                            data-bs-target="#cOutput"
+                                            aria-expanded="true"
+                                            aria-controls="cOutput">
+                                        출력 (Output)
+                                    </button>
+                                </h2>
+                                <div id="cOutput"
+                                     class="accordion-collapse collapse show"
+                                     aria-labelledby="hOutput">
+                                    <div class="accordion-body">
+                                        <p class="mb-0">{{ input_data.data.output }}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /입력/출력 아코디언 -->
+
+                        <!-- 스코어 선택 -->
+                        {% for label in labels %}
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">{{ label.name }}</label>
+                            <div class="btn-group" role="group" aria-label="{{ label.name }}">
+                                {% with selected_scores|get_item:label.name as current_score %}
+                                    {% for opt in label.description|split:"," %}
+                                        {% with opt|trim as v %}
+                                            <input type="radio"
+                                                   class="label-radio-input"
+                                                   name="score_{{ label.name }}"
+                                                   id="score_{{ label.name }}_{{ forloop.counter }}"
+                                                   value="{{ v }}"
+                                                   {% if current_score == v %}checked{% endif %}
+                                                   autocomplete="off">
+                                            <label class="label-radio-label"
+                                                   for="score_{{ label.name }}_{{ forloop.counter }}">
+                                                {{ v }}
+                                            </label>
+                                        {% endwith %}
+                                    {% endfor %}
+                                {% endwith %}
+                            </div>
+                        </div>
+                        {% endfor %}
+
+                        <!-- 액션 버튼 그룹 -->
+                        <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+                               {% if current_index > 1 %}
+                                 <!-- 이전: order-1 -->
+                                 <button type="button"
+                                         class="btn hit-btn-outline-primary"
+                                         onclick="submitAndGo({{ input_data.order|add:-1 }})">
+                                   ← 이전
+                             </button>
+                              {% endif %}
+
+                            <div class="d-flex gap-2">
+                                <button type="button"
+                                        class="btn btn-outline-success btn-sm guideline-toggle-btn"
+                                        onclick="toggleGuideline()">
+                                    📘 가이드라인 & 💬 코멘트 작성
+                                </button>
+                                {% include "label_studio/guide_line.html" %}
+
+                                   {% if is_last_input %}
+                                     <!-- 완료: 현재 order -->
+                                     <button type="button"
+                                             class="btn hit-btn-solid-primary"
+                                             onclick="submitAndGo({{ input_data.order }})">
+                                       평가 저장 완료
+                                     </button>
+                                   {% else %}
+                                     <!-- 다음: order+1 -->
+                                     <button type="button"
+                                             class="btn hit-btn-outline-primary"
+                                             onclick="submitAndGo({{ input_data.order|add:1 }})">
+                                       저장하고 다음 →
+                                     </button>
+                                   {% endif %}
+                            </div>
+                        </div>
+                        <!-- /액션 버튼 그룹 -->
+                    </div>
+                    <!-- /label-card-body -->
+                </div>
+                <!-- /label-card -->
+            </div>
+            <!-- /col-md-8 -->
+        </div>
+        <!-- /row -->
+    </form>
+    <!-- /평가 폼 -->
+</div>
+
+{{ selected_scores|json_script:"original-scores" }}
+<script>
+    const originalScores = JSON.parse(document.getElementById('original-scores').textContent);
+</script>
+<script>
+    const currentOrder = {{ input_data.order }};
+    function submitAndGo(targetOrder) {
+        const form = document.getElementById('evaluationForm');
+        document.getElementById('data_order').value = targetOrder;
+
+        try {
+            originalScores = JSON.parse(document.getElementById('original-scores').textContent);
+        } catch (e) {
+            console.warn("originalScores 파싱 실패:", e);
+        }
+
+        const groups = new Set();
+        const currentScores = {};
+
+        form.querySelectorAll("input[type='radio'][name^='score_']").forEach(input => {
+            groups.add(input.name);
+            if (input.checked) {
+                const labelName = input.name.replace('score_', '');
+                currentScores[labelName] = input.value;
+            }
+        });
+
+
+
+        // 점수가 모두 선택되었는지 확인
+        for (const label of groups) {
+            const key = label.replace('score_', '');
+            const current = currentScores[key] || '';
+            if (!current) {
+                alert("⚠️ 모든 항목에 대해 점수를 선택해주세요.");
+                return;
+            }
+        }
+
+        // 이전 이동은 무조건 허용
+        if (targetOrder < currentOrder) {
+            return form.submit();
+        }
+
+        // 변경된 경우에만 confirm
+        let changed = false;
+        for (const label of groups) {
+            const key = label.replace('score_', '');
+            const original = originalScores[key] || '';
+            const current = currentScores[key] || '';
+            if (original !== current) {
+                changed = true;
+                break;
+            }
+        }
+
+        if (changed) {
+            const confirmed = confirm("변경 사항이 있습니다. 수정 후 저장할까요?");
+            if (!confirmed) return;
+        }
+
+        form.submit();
+    }
+</script>
+
+{% endblock %}

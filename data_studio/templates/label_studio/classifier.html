@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container py-4">
+    <!-- 진행도 + 현재 위치 통합 표시 -->
+    <div class="card bg-light border-0 shadow-sm mb-4">
+        <div class="card-body py-3 px-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h5 class="mb-0 fw-bold text-primary">{{ project.title }} 작업 진행</h5>
+                    <small class="text-muted">현재 위치: <strong>{{ current_index }}</strong> / {{ total_inputs }}</small>
+                </div>
+                <div class="text-end">
+                    <span class="text-muted me-2">진행도:</span>
+                    <strong>{{ progress }}%</strong>
+                </div>
+            </div>
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%;" aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100"></div>
+                    <span class="fw-bold">{{ progress }}%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- 작업 카드 -->
+    <form id="labelForm" method="post" action="{% url 'label_studio:submit_work' project.id %}"
+        class="label-form">
+        {% csrf_token %}
+        <div class="label-card">
+            <div class="label-card-header">
+                <h5>{{ project.title }} 작업 {{ current_index }} / {{ total_inputs }}</h5>
+            </div>
+            <div class="label-card-body">
+                <p class="label-text">{{ input_data.data.text }}</p>
+                <input type="hidden" name="input_id" value="{{ input_data.id }}">
+                <input type="hidden" name="data_order" id="data_order">
+    
+                <div class="label-group mb-4">
+                    <label class="label-group-title">레이블 선택</label>
+                    <div class="label-radio-group">
+                    {% for label in labels %}
+                    <input type="radio" class="label-radio-input" name="label"
+                            id="label{{ forloop.counter }}" value="{{ label.name }}"
+                            {% if selected_label == label.name %}checked{% endif %}>
+                    <label for="label{{ forloop.counter }}" class="label-radio-label">
+                        {{ label.name }}
+                    </label>
+                    {% endfor %}
+                </div>
+            </div>
+    
+<!-- 액션 버튼 그룹 -->
+<div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+    {% if current_index > 1 %}
+      <!-- 이전: order-1 -->
+      <button type="button"
+              class="btn hit-btn-outline-primary"
+              onclick="submitAndGo({{ input_data.order|add:-1 }})">
+        ← 이전
+  </button>
+   {% endif %}
+
+ <div class="d-flex gap-2">
+     <button type="button"
+             class="btn btn-outline-success btn-sm guideline-toggle-btn"
+             onclick="toggleGuideline()">
+         📘 가이드라인 & 💬 코멘트 작성
+     </button>
+     {% include "label_studio/guide_line.html" %}
+
+        {% if is_last_input %}
+          <!-- 완료: 현재 order -->
+          <button type="button"
+                  class="btn hit-btn-solid-primary"
+                  onclick="submitAndGo({{ input_data.order }})">
+            평가 저장 완료
+          </button>
+        {% else %}
+          <!-- 다음: order+1 -->
+          <button type="button"
+                  class="btn hit-btn-outline-primary"
+                  onclick="submitAndGo({{ input_data.order|add:1 }})">
+            저장하고 다음 →
+          </button>
+        {% endif %}
+ </div>
+</div>
+        </div>
+    </form>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const form = document.getElementById('labelForm');
+      if (!form) return;
+    
+      let currentOrder = {{ input_data.order }};
+      window.submitAndGo = function(targetOrder) {
+        // 이전(순서가 작으면) : 선택 없이 바로 이동
+    
+        // 다음/완료 : 반드시 선택
+        const selected = form.querySelector('input[name="label"]:checked');
+        if (!selected) {
+          alert("⚠️ 레이블을 선택해주세요.");
+          return;
+        }
+
+        if (targetOrder < currentOrder) {
+          document.getElementById('data_order').value = targetOrder;
+          return form.submit();
+        }
+    
+        if (!confirm("선택한 레이블을 저장하고 다음 작업으로 이동할까요?")) return;
+    
+        document.getElementById('data_order').value = targetOrder;
+        form.submit();
+      };
+    
+      // 폼 제출 전에도 동일한 검증
+      form.addEventListener('submit', e => {
+        const selected = form.querySelector('input[name="label"]:checked');
+        if (!selected) {
+          e.preventDefault();
+          alert("⚠️ 레이블을 선택해주세요.");
+        }
+      });
+    });
+    </script>
+    
+{% endblock %}

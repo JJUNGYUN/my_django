@@ -6,34 +6,30 @@
 {% load custom_filters %}
 
 <head>
-    <title>{{ benchm.ark.name }}</title>
+    <title>{{ benchmark.name }}</title>
 </head>
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+<link rel="stylesheet" href="{% static 'prism/prism-tomorrow.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 
 <div class="container my-3">
-    <div class="card-body border-bottom py-2">
-        <div class="d-flex justify-content-between align-items-center">
-            <!-- 제목 (왼쪽 정렬) -->
-            <div class="d-flex">
-                <h4 class="mb-2 mr-2 fw-bold">{{ benchmark.benchmark_name }}</h4>
-                <input type="hidden" id="copy-value" value="{{ benchm.ark.weight_path }}">
-                <button onclick="copyHiddenValue('copy-value')" class="">
-                    <img class="mb-0" src="{% static 'svg/copy.svg' %}" alt="" width="10" height="10">
-                </button>
+    <section class="section-header">
+        <div class="header-main">
+            <h1 class="entity-title">{{ benchmark.benchmark_name }}</h1>
+            <button class="copy-button" onclick="copyHiddenValue('copy-value')" aria-label="경로 복사">
+                <img src="{% static 'svg/copy.svg' %}" alt="Copy" width="16" height="16">
+            </button>
+            <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
+        </div>
+        <div class="header-meta">
+            <div class="badge-group">
+                {% for tag in benchmark.tag|split:"," %}
+                <span class="badge-pill">{{ tag }}</span>
+                {% endfor %}
             </div>
-            <!-- 작성자 (오른쪽 정렬 & 작은 폰트) -->
-            <h6 class="mb-0 text-muted">Author: {{ benchmark.author }}</h6>
+            <span class="meta-item">Author: {{ benchmark.author }}</span>
         </div>
-        <div class="mt-1 mb-1">
-            {% for tag in benchmark.tag|split:"," %}
-            <a class="mb-1 mr-1 md:mb-1.5 md:mr-1.5 rounded-lg tag" >
-                {{tag}}
-            </a>
-            {% endfor %}
-        </div>
-    </div>
+    </section>
     <ul class="nav nav-tabs" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
             <button class="nav-link {% if active_tab == 'readme' %}active{% endif %}" id="readme-tab" data-bs-toggle="tab" data-bs-target="#readme" 
@@ -55,85 +51,100 @@
         </li>
     </ul>
     <div class="tab-content">
-        <div class="tab-pane fade show {% if active_tab == 'readme' %}show active{% endif %} p-3 markdown overflow-scroll" id="readme" role="tabpanel" aria-labelledby="readme-tab">
-            {{ readme|mark|safe }}
-        </div>
+        <div class="tab-pane fade show active p-3 markdown position-relative"
+            style="overflow-y: auto; max-height: 70vh;" id="readme" role="tabpanel" aria-labelledby="readme-tab">
 
-        <div class="tab-pane fade p-3 {% if active_tab == 'leader_board' %}show active{% endif %}" id="leader_board" role="tabpanel" aria-labelledby="leader_board-tab">
-            <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
-                <div class="mr-4 flex flex-none items-center truncate">
-                    <a class="hover:underline user-name fw-bold font-mono">평과 결과</a>
-                </div>
-                <div class="flex flex-none items-center truncate">
-                    <a class="hover:underline user-name text-gray-400 text-xs text-muted">{{ dataset.dataset_path}}</a>
+            <!-- 보기 모드 -->
+            <div class="markdown-body" id="readme-view" style="padding-bottom: 60px;">
+                {{ readme|mark|safe }}
+            </div>
+
+            <!-- 수정 모드 (초기에 숨김) -->
+            <div id="readme-edit" style="display: none; padding-bottom: 60px;">
+                <textarea id="readme-textarea" class="form-control" rows="20"
+                    style="overflow-y: auto; resize: vertical; min-height: 400px;">{{ readme|escape }}</textarea>
+                <div class="mt-2 d-flex gap-2">
+                    <button class="btn btn-primary btn-sm" onclick="saveReadme({{ model.id }})">저장</button>
+                    <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">취소</button>
                 </div>
             </div>
 
-            <table class="w-full table-auto rounded-lg font-mono text-xs text-gray-900">
-                <thead class="shadow-xs sticky left-0 right-0 top-0 z-1 bg-white align-top">
-                    <tr class="space-y-54 h-full min-w-fit divide-x border-b text-left">
-                        <th class="h-full max-w-sm p-2 text-left  relative w-auto">
-                            <div class="flex h-full flex-col flex-nowrap justify-between">
-                                <div class="flex items-center justify-between">
-                                    모델
-                                </div>
-                            </div>
-                        </th>
-                        {% for head in headers %}
-                        <th class="h-full max-w-sm p-2 text-left  relative w-auto">
-                            <div class="flex h-full flex-col flex-nowrap justify-between">
-                                <div class="flex items-center justify-between">
-                                    {{head}}
-                                </div>
-                            </div>
-                        </th>
-                        {% endfor %}
-                    </tr>
-                </thead>
-                <tbody class="h-8 overflow-scroll">
-                    {% for row in rows %}
-                        <tr class="group cursor-pointer space-x-4 divide-x border-b outline-offset-[-2px] odd:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-925 dark:hover:bg-gray-850  " tabindex="0" data-row-idx="0">
-                            <td class="min-w-fit max-w-sm break-words p-1"  >
-                                <div x-data="{ expanded: false }" @click="expanded = !expanded" class="cursor-pointer">
-                                    <div :class="expanded ? '' : 'line-clamp-1'">
-                                        <div dir="auto">
-                                            <span>
-                                                {{ row.model_name }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-
-                            {% for head in headers %}
-                            <td class="min-w-fit max-w-sm break-words p-1"  >
-                                <div x-data="{ expanded: false }" @click="expanded = !expanded" class="cursor-pointer">
-                                    <div :class="expanded ? '' : 'line-clamp-1'">
-                                        <div dir="auto">
-                                            <span>
-                                                {{ row|dict_get:head }}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                            {% endfor %}
-                            <td class="min-w-fit max-w-sm break-words p-1"  >
-                                <div x-data="{ expanded: false }" @click="expanded = !expanded" class="cursor-pointer">
-                                    <div :class="expanded ? '' : 'line-clamp-1'">
-                                        <div dir="auto">
-                                            <a href="{% url 'model_dashboard:eval_viewer' benchmark.id row.model_id %}" class="btn btn-sm btn-warning">미리보기</a>
-                                        </div>
-                                    </div>
-                                </div>
-                            </td>
-                        </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-
 
         </div>
+
+        <div class="tab-pane fade p-0 {% if active_tab == 'leader_board' %}show active{% endif %}"
+        id="leader_board" role="tabpanel" aria-labelledby="leader_board-tab">
+   
+     <!-- 탭 헤더 카드 -->
+     <div class="label-card mb-4">
+       <div class="label-card-header">
+         <div class="d-flex justify-content-between align-items-center">
+           <h5 class="mb-0">평과 결과</h5>
+           <small class="text-muted">{{ dataset.dataset_path }}</small>
+         </div>
+       </div>
+       <div class="label-card-body p-0">
+   
+         <!-- 결과 테이블 -->
+         <div class="overflow-x-auto">
+           <table class="manager-table mb-0">
+             <thead>
+               <tr>
+                 <th>모델</th>
+                 {% for head in headers %}
+                 <th>{{ head }}</th>
+                 {% endfor %}
+                 <th>미리보기</th>
+               </tr>
+             </thead>
+             <tbody>
+               {% for row in rows %}
+               <tr tabindex="0">
+                 <!-- 모델명 (클릭하면 줄임/확장) -->
+                 <td>
+                   <div x-data="{ expanded: false }"
+                        @click="expanded = !expanded"
+                        class="cursor-pointer">
+                     <div :class="expanded ? '' : 'text-truncate'">
+                       {{ row.model_name }}
+                     </div>
+                   </div>
+                 </td>
+   
+                 <!-- 동적 컬럼들 -->
+                 {% for head in headers %}
+                 <td>
+                   <div x-data="{ expanded: false }"
+                        @click="expanded = !expanded"
+                        class="cursor-pointer">
+                     <div :class="expanded ? '' : 'text-truncate'">
+                       {{ row|dict_get:head }}
+                     </div>
+                   </div>
+                 </td>
+                 {% endfor %}
+   
+                 <!-- 미리보기 버튼 -->
+                 <td>
+                   <a href="{% url 'model_dashboard:eval_viewer' benchmark.id row.model_id %}"
+                      class="hit-btn-solid-primary hit-btn-sm">
+                     미리보기
+                   </a>
+                 </td>
+               </tr>
+               {% endfor %}
+             </tbody>
+           </table>
+         </div>
+         <!-- /overflow-x -->
+   
+       </div>
+       <!-- /.label-card-body -->
+     </div>
+     <!-- /.label-card -->
+   
+   </div>
+   
         <div class="tab-pane fade p-3 {% if active_tab == 'add_eval_result' %}show active{% endif %}" id="add_eval_result" role="tabpanel" aria-labelledby="add_eval_result-tab">
             {% include 'model_dashboard/add_result.html' %}
 
@@ -151,6 +162,7 @@
     </div>
 
 <script src="{% static 'cdn.min.js' %}"></script>
+<script src="{% static 'bootstrap.bundle.min.js' %}"></script>
 </div>
 {% endblock %}
 {% block script %}

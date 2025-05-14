@@ -1,0 +1,58 @@
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+
+<!-- 1) 모달 (기존과 동일) -->
+{% if file_content %}
+<div class="modal fade" id="fileModal" tabindex="-1" aria-labelledby="fileModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-xl modal-fullscreen-md-down">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="fileModalLabel">{{ target_path }}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="닫기"></button>
+      </div>
+      <div class="modal-body">
+        {{ file_content|safe }}
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">닫기</button>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    new bootstrap.Modal(document.getElementById('fileModal')).show();
+  });
+</script>
+{% endif %}
+
+  {% csrf_token %}
+  <!-- now the hidden lives INSIDE the form -->
+  <input type="hidden" name="current_path" value="{{ path }}">
+  <!-- 상단: 현재 경로 -->
+  <div class="file-browser__header">
+    <span class="file-browser__path">{{ path }}</span>
+    <span class="file-browser__label">File System</span>
+  </div>
+
+  <!-- 파일/폴더 목록 -->
+  <ul class="file-browser__list">
+    <!-- 상위 폴더 진입 -->
+    <li class="file-browser__row file-browser__row--dir">
+      <button type="submit" name="file_path" value="before" class="file-browser__name">..</button>
+      <span class="file-browser__size"></span>
+      <span class="file-browser__date"></span>
+    </li>
+
+    {% for file in file_list %}
+    <li class="file-browser__row
+                {% if file.file_type == '📁' %}file-browser__row--dir{% else %}file-browser__row--file{% endif %}">
+      <button type="submit" name="file_path" value="{{ file.name }}" class="file-browser__name">
+        {{ file.name }}
+      </button>
+      <span class="file-browser__size">{{ file.size }}</span>
+      <span class="file-browser__date">{{ file.modified }}</span>
+    </li>
+    {% endfor %}
+  </ul>

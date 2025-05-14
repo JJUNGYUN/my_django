@@ -1,0 +1,64 @@
+{% block content %}
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+
+<head>
+    <title>{{ dataset.name }}</title>
+</head>
+{% load static %}
+<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+
+<form method="post" >
+    {% csrf_token %}
+<div class="tab-content">
+    <div class="tab-pane fade p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab">
+        <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
+            <div class="mr-4 flex flex-none items-center truncate">
+                <a class="hover:underline user-name fw-bold font-mono">{{path}}</a>
+                <input type="hidden" name="current_path" value="{{ path }}">
+            </div>
+            <div class="flex flex-none items-center truncate">
+                <a class="hover:underline user-name text-gray-400 text-xs text-muted">file system</a>
+            </div>
+        </div>
+        {% csrf_token %}
+        <ul class="mb-8 rounded-b-lg border border-t-0 dark:border-gray-800 dark:bg-gray-900">
+            <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
+                <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
+                    📁&nbsp;
+                    <button type="submit" name="file_path" value="before" class="btn btn-link" style="all: unset; cursor: pointer;">
+                        ..
+                    </button>
+                </a>
+                <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
+                <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
+                    <span class="truncate" > {{ file.size }} </span>
+                </a> 
+                <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
+                    <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
+                </a>
+            </li>
+            {% for file in file_list %}
+            <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
+                <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
+                    {{file.file_type}}&nbsp;
+                    <button type="submit" name="file_path" value="{{ file.name }}" class="btn btn-link" style="all: unset; cursor: pointer;">
+                        {{ file.name }}
+                    </button>
+                </a>
+                <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
+                <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
+                    <span class="truncate" > {{ file.size }} </span>
+                </a> 
+                <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
+                    <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
+                </a>
+            </li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+</form>
+{% endblock content %}

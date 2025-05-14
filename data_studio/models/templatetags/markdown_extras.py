@@ -4,6 +4,12 @@ from django.utils.safestring import mark_safe
 from markdown.extensions.codehilite import CodeHiliteExtension
 from pygments.formatters import HtmlFormatter
 
+import markdown_it
+from markdown_it import MarkdownIt
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name
+from pygments.formatters import HtmlFormatter
+
 register = template.Library()
 style = HtmlFormatter().get_style_defs('.codehilite')
 
@@ -11,24 +17,18 @@ style = HtmlFormatter().get_style_defs('.codehilite')
 def sub(value, arg):
     return value - arg
 
-def convert_markdown_to_html(text):
-    """
-    Markdown을 HTML로 변환하며, 코드 하이라이팅을 적용
-    """
-    html = markdown.markdown(
-        text, 
-        extensions=["nl2br", "fenced_code", "toc","tables", CodeHiliteExtension(linenums=False)]
-    )
-    return f"{html}"
+def pygments_highlight(code, lang, attrs=None):
+    try:
+        lexer = get_lexer_by_name(lang)
+        formatter = HtmlFormatter(nowrap=True)
+        return highlight(code, lexer, formatter)
+    except Exception:
+        return f'<pre><code class="language-{lang}">{code}</code></pre>'
 
-@register.filter
-def mark(value):
-    return convert_markdown_to_html(value)
+md = MarkdownIt("commonmark", {"highlight": pygments_highlight}).enable("fence").enable("table")
 
-# @register.filter
-# def mark(value):
-#     extensions = ["nl2br", "fenced_code", "tables", CodeHiliteExtension(linenums=False)]
-#     style = HtmlFormatter().get_style_defs('.codehilite')
-
-#     return f"<style>{style}</style> {mark_safe(markdown.markdown(value, extensions=extensions))}"
+@register.filter(name='mark')
+def markdown_to_html(text):
+    html = md.render(text)
+    return mark_safe(html)  # escape 제거
 

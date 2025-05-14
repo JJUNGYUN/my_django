@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% block content %}
+<div class="container py-4">
+    <!-- 제목 및 진행도 -->
+
+    <div class="label-card bg-light border-0 shadow-sm mb-4">
+        <div class="label-card-body py-3 px-4">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                <div>
+                    <h5 class="mb-0 fw-bold text-primary">{{ project.title }} 평가 작업</h5>
+                    <small class="text-muted">현재 위치: <strong>{{ current_index }}</strong> / {{ total_inputs }}</small>
+                </div>
+                <div class="text-end">
+                    <span class="text-muted me-2">진행도:</span>
+                    <strong>{{ progress }}%</strong>
+                </div>
+            </div>
+            <div class="progress" style="height: 20px;">
+                <div class="progress-bar bg-success" role="progressbar" style="width: {{ progress }}%;"
+                    aria-valuenow="{{ progress }}" aria-valuemin="0" aria-valuemax="100">
+                    {{ progress }}%
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 입력 문장 -->
+    <div class="row mb-4">
+        <div class="col">
+            <div class="label-card shadow-sm border-0 bg-light">
+                <div class="label-card-body">
+                    <h5 class="text-primary fw-bold">입력 문장</h5>
+                    <p class="mb-0">{{ input_data.data.input }}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <form id="compareForm" method="post" action="{% url 'label_studio:submit_work' project.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="input_id"    value="{{ input_data.id }}">
+        <input type="hidden" name="selected_output" id="selected_output">
+        <input type="hidden" name="data_order"      id="data_order">
+      
+        <div class="row g-4 mb-4">
+          {% for opt in "A,B"|split:"," %}
+            <div class="col-md-6">
+              <div id="card-{{ opt }}"
+                   class="label-card hover-select h-100 {% if selected_output == opt %}
+                     {% if opt == 'A' %}border-success{% else %}border-warning{% endif %} border-3
+                   {% endif %}"
+                   onclick="selectOutput('{{ opt }}')">
+                <div class="{% if opt == 'A' %}label-card-header{% else %}label-card-header-sub{% endif %}">
+                  <h6 class="mb-0">출력 {{ opt }}</h6>
+                </div>
+                <div class="label-card-body">
+                    {% if opt == 'A' %}
+                    <p class="mb-0">{{ input_data.data.output_a }}</p>
+                  {% else %}
+                    <p class="mb-0">{{ input_data.data.output_b }}</p>
+                  {% endif %}
+                </div>
+              </div>
+            </div>
+          {% endfor %}
+        </div>
+      
+        <div class="label-actions">
+          {% if current_index > 1 %}
+            <!-- 이전: 현재 order - 1 -->
+            <button type="button"
+                    class="label-btn label-btn-secondary"
+                    onclick="submitCompare({{ input_data.order|add:-1 }})">
+              ← 이전
+            </button>
+          {% else %}
+            <span style="width:75px"></span>
+          {% endif %}
+      
+          <button type="button"
+                  class="btn btn-outline-success btn-sm guideline-toggle-btn"
+                  onclick="toggleGuideline()">
+            📘 가이드라인 & 💬 코멘트 작성
+          </button>
+          {% include "label_studio/guide_line.html" %}
+      
+          {% if is_last_input %}
+            <!-- 완료: 현재 order -->
+            <button type="button"
+                    class="label-btn label-btn-primary"
+                    onclick="submitCompare({{ input_data.order }})">
+              저장 완료
+            </button>
+          {% else %}
+            <!-- 다음: 현재 order + 1 -->
+            <button type="button"
+                    class="label-btn label-btn-primary"
+                    onclick="submitCompare({{ input_data.order|add:1 }})">
+              저장하고 다음 →
+            </button>
+          {% endif %}
+        </div>
+      </form>
+</div>
+
+
+
+<style>
+    .hover-select {
+        transition: box-shadow 0.2s ease-in-out, transform 0.2s;
+        cursor: pointer;
+    }
+
+    .hover-select:hover {
+        box-shadow: 0 0 0 0.2rem rgba(2, 182, 146, 0.301);
+        transform: translateY(-2px);
+    }
+
+    .border-3 {
+        border-width: 3px !important;
+    }
+</style>
+
+
+<script>
+    // 현재 order를 JS에서도 알고 있어야 이전/다음 비교가 가능
+    const currentOrder = {{ input_data.order }};
+    let selected = "{{ selected_output }}";
+  
+    function selectOutput(opt) {
+      selected = opt;
+      document.getElementById('selected_output').value = opt;
+      document.querySelectorAll('.hover-select').forEach(el =>
+        el.classList.remove('border-success','border-warning','border-3')
+      );
+      document.getElementById(`card-${opt}`)
+        .classList.add(opt==='A' ? 'border-success' : 'border-warning','border-3');
+    }
+  
+    function submitCompare(targetOrder) {
+      const form = document.getElementById('compareForm');
+      document.getElementById('data_order').value = targetOrder;
+  
+      // “다음/완료”일 땐 반드시 옵션 선택
+      if (!selected) {
+        alert("⚠️ 출력 A 또는 B 중 하나를 선택해주세요.");
+        return;
+      }
+  
+    // “이전”(targetOrder < currentOrder)일 때는 선택 없이 바로 제출
+    if (targetOrder < currentOrder) {
+        form.submit();
+        return;
+      }
+
+      form.submit();
+    }
+  </script>
+  
+
+{% endblock %}

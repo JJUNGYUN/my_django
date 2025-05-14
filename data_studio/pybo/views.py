@@ -84,3 +84,32 @@ def question_delete(request, question_id):
     question.delete()
     return redirect('pybo:index')
 
+
+def test(request):
+    import os
+    from datasets_repo.utils import get_file_info_from_dir
+    if request.method == 'POST':
+        current_path = request.POST.get('current_path')
+        target_path = request.POST.get('file_path')
+        if target_path=='before':
+            path = os.path.dirname(os.path.normpath(current_path))
+            print(path)
+        else:
+            path = os.path.join(current_path,target_path)
+
+        if os.path.isdir(path):
+            file_list = get_file_info_from_dir(path)
+        else:
+            path = current_path
+            file_list = get_file_info_from_dir(current_path)
+    else:
+        path = '/'
+        if os.path.isdir(path):
+            file_list = get_file_info_from_dir(path)
+
+
+
+    context = {'file_list':file_list, 'path':path}
+    return render(request, 'test/list_test.html', context)
+
+

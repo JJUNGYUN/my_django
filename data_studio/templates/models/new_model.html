@@ -1,82 +1,111 @@
 {% extends 'base.html' %}
+{% load static %}
 {% block content %}
 
-<head>
-    <title>new model</title>
-</head>
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+<div class="container my-4">
+    <h4 class="mb-3 border-bottom pb-2">새 모델 등록</h4>
 
-<div class="container">
-    <h4 class="my-3 border-bottom pb-2">model registe</h4>
-    <form method="post" >
+    <form id="modelForm" method="post" novalidate>
         {% csrf_token %}
-        <!-- {{form.as_p}} -->
-        {% if form.errors %}
-        <div class="alert alert-danger" role="alert">
-            {% for field in form %}
-            {% if field.errors %}
-            <div>
-                <strong>
-                    {{ field.label}}
-                </strong>
-                {{field.errors}}
-            </div>
-            {% endif %}
-            {% endfor %}        
-        </div>
-        {% endif %}
-        <div class="mb-3">
-            <label for="name" class="form-label">모델 이름</label>
-            <input type="text" class="form-control" name="name" id="name" value="{{form.name.value|default_if_none:''}}" autocomplete="off">
-        </div>
-        <div class="mb-3">
-            <label for="parameter_size" class="form-label">파라메터 사이즈(110M, 10B etc...)</label>
-            <input type="text" class="form-control" name="parameter_size" id="parameter_size" value="{{form.parameter_size.value|default_if_none:''}}" autocomplete="off">
-        </div>
-        <div class="mb-3">
-            <label for="tag" class="form-label">태그 (,로 구분!)</label>
-            <input type="text" class="form-control" name="tag" id="tag" value="{{form.tag.value|default_if_none:''|safe}}" autocomplete="off">
-        </div>
-        <div class="mb-3">
-            <label for="weight_path" class="form-label">모델 경로 (README.md 가 있는 경로면 좋아요!)</label>
-            <div class="mb-3 d-flex align-items-center gap-2">
-                <input type="text" class="form-control" name="weight_path" id="weight_path"
-                    value="{{ form.weight_path.value|default_if_none:'' }}" autocomplete="off">
-                <button type="submit" name="preview" value="true" class="btn btn-light">미리보기</button>
-            </div>
-        </div>
-        {% if file_list %}
-        <div class="tab-pane fade p-3" id="file_system" role="tabpanel" aria-labelledby="file_system-tab"></div>
-            <div class="from-gray-100-to-white bg-linear-to-t flex flex-wrap items-baseline rounded-t-lg border border-b-0 px-3 py-2 dark:border-gray-800 justify-between">
-                <div class="flex flex-none items-center truncate">
-                    <a class="hover:underline user-name text-gray-400 text-xs text-muted">{{ model.weight_path }}</a>
+
+        <!-- 모델 정보 카드 -->
+        <div class="card mb-4">
+            <div class="card-header"><strong>모델 정보</strong></div>
+            <div class="card-body">
+                <div class="row gx-3">
+                    <!-- 모델 이름 -->
+                    <div class="col-md-6 mb-3">
+                        <label for="name" class="form-label">모델 이름<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name"
+                            value="{{ form.name.value|default_if_none:'' }}" required>
+                        <div class="invalid-feedback">모델 이름을 입력해주세요.</div>
+                    </div>
+
+                    <!-- Task Type: 자유 입력 -->
+                    <div class="col-md-6 mb-3">
+                        <label for="task_type" class="form-label">Task Type<span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="task_type" name="task_type"
+                            placeholder="예: LLM, PLM, DPO, GEN 등" value="{{ form.task_type.value|default_if_none:'' }}"
+                            required>
+                        <div class="invalid-feedback">Task Type을 입력해주세요.</div>
+                    </div>
+
+                    <!-- 태그: Tagify -->
+                    <div class="col-md-6 mb-3">
+                        <label for="tag-input" class="form-label">태그</label>
+                        <input type="text" class="form-control" id="tag-input" name="tag" placeholder="쉼표로 구분된 태그 입력"
+                            value="{{ form.tag.value|default_if_none:''|escape }}">
+                        <small class="form-text text-muted">예: ai, vision, nlp</small>
+                    </div>
                 </div>
             </div>
-            <ul class="mb-8 rounded-b-lg border border-t-0 dark:border-gray-800 dark:bg-gray-900">
-                {% for file in file_list %}
-                <li class="grid h-10 grid-cols-12 place-content-center gap-x-3 border-t px-3 dark:border-gray-800">
-                    <a class="col-span-8 md:col-span-10 lg:col-span-7 flex font-mono items-center text-black hover:underline  file-item">
-                        {{file.file_type}}&nbsp;
-                        <span class="truncate">{{file.name}}</span>
-                    </a>
-                    <div class="col-span-8 md:col-span-10 lg:col-span-1"></div> 
-                    <a class="col-span-8 md:col-span-10 lg:col-span-1  flex font-mono items-center text-gray-400 hover:underline file-item">
-                        <span class="truncate"> {{ file.size }} </span>
-                    </a> 
-                    <a class="col-span-8 md:col-span-10 lg:col-span-2  hidden truncate text-right text-gray-400 md:block file-item">
-                        <time datetime="2023-05-28T16:30:47" title="Sun, 28 May 2023 16:30:47 GMT">{{ file.modified }}</time>
-                    </a>
-                </li>
-                {% endfor %}
-            </ul>
         </div>
-        {% endif %} 
-        <div class="mb-3 d-flex justify-content-center">
-            <button type="submit" name="save" class="mb-3 pb-2 btn btn-info">save</button>
-            <a href="{% url 'models:index' %}" class="mb-3 pb-2 btn btn-danger">Cancel</a>
+
+        <!-- 파일 시스템 뷰어 카드 (항상 보임) -->
+        <div class="card mb-4">
+            <div class="card-header"><strong>파일 시스템 뷰어</strong></div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label for="weight_path" class="form-label">모델 경로 (README.md가 있는 폴더)</label>
+                    <input type="text" class="form-control" id="weight_path" name="weight_path"
+                        value="{{ path|default_if_none:'' }}" readonly>
+                </div>
+
+                {% include "partials/file_system_viewr.html" %}
+            </div>
+        </div>
+
+        <!-- 제출 버튼 -->
+        <div class="mb-3 text-center">
+            <button type="submit" name="save" class="btn btn-info me-2">저장</button>
+            <a href="{% url 'models:index' %}" class="btn btn-danger">취소</a>
         </div>
     </form>
 </div>
+
+{# Tagify only #}
+<link rel="stylesheet" href="{% static 'tagify/tagify.css' %}">
+<script src="{% static 'tagify/tagify.js' %}"></script>
+
+<script>
+    // Tagify 초기화
+    document.addEventListener('DOMContentLoaded', () => {
+        var input = document.getElementById('tag-input');
+        if (input) {
+            new Tagify(input, {
+                delimiters: ",",
+                dropdown: {
+                    enabled: 0   // 자동 완성 드롭다운 비활성화
+                }
+            });
+        }
+    });
+
+    // Bootstrap 실시간 검증
+    (function () {
+        'use strict';
+        var form = document.getElementById('modelForm');
+        form.addEventListener('submit', function (event) {
+            if (!form.checkValidity()) {
+                event.preventDefault();
+                event.stopPropagation();
+            }
+            form.classList.add('was-validated');
+        }, false);
+    });
+
+    ['name', 'task_type'].forEach(id => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('keydown', e => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    // 필요하면 여기에 포커스를 다음 필드로 이동하는 로직 추가 가능
+                }
+            });
+        });
+
+</script>
+
+
 {% endblock %}

@@ -15,11 +15,13 @@ def get_file_info_from_dir(directory_path):
                     filetype = '📁'
                 else:
                     filetype = '📄'
+                    
                 file_info_list.append({
                     'file_type' : filetype,
                     'name': filename,
                     'size': f"{file_size} MB",
                     'modified': modified_time
                 })
-                
+    file_info_list = sorted(file_info_list, key=lambda x: (x['file_type'], x['name']))
+    
     return file_info_list

@@ -1,0 +1,301 @@
+{% extends 'base.html' %}
+
+{% load markdown_extras %}
+{% load custom_filters %}
+{% load mathfilters %}
+{% block content %}
+<div class="container my-5">
+  <h2 class="mb-4">🛠️ 새 프로젝트 생성</h2>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+            {% if form.non_field_errors %}
+        <div class="alert alert-danger">{{ form.non_field_errors }}</div>
+        {% endif %}
+
+        <!-- 기본 정보 -->
+        <div class="card mb-4">
+            <div class="card-header">기본 정보</div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <label class="form-label">프로젝트 제목</label>
+                    <input type="text" name="title" class="form-control"
+                        value="{{ form.title.value|default_if_none:'' }}">
+                    {% if form.title.errors %}
+                    <div class="text-danger small">
+                        {{ form.title.errors.as_text|linebreaksbr }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">프로젝트 설명</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="설명"></textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">시작일</label>
+                        <input type="date" name="start_date" class="form-control">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label">마감일</label>
+                        <input type="date" name="end_date" class="form-control">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 작업 타입 -->
+        <div class="card mb-4">
+          <div class="card-header">작업 유형</div>
+          <div class="card-body">
+            <select name="task_type" id="taskTypeSelector" class="form-select">
+              <option selected disabled>작업 유형 선택</option>
+              <option value="classification">분류 (Classification)</option>
+              <option value="summary">요약</option>
+              <option value="evaluation">평가</option>
+              <option value="compare">비교</option>
+              <option value="hierarchy">계층(Hierarchy)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- 작업자 지정 -->
+        <div class="card-body mb-4">
+            <select name="workers" class="form-select" multiple>
+                {% for user in users %}
+                <option value="{{ user.id }}" {% if user.id|stringformat:"s" in selected_worker_ids %} selected {% endif%}>{{ user.username }}</option>
+
+                {% endfor %}
+            </select>
+            <div class="form-text">Ctrl 또는 ⌘ 키로 여러 명 선택</div>
+            <div id="selected-workers" class="mt-2 d-flex flex-wrap gap-2"></div>
+
+        </div>
+
+    <!-- 라벨 설정 -->
+    <div id="labels-dynamic" class="card mb-4">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <span>라벨 설정</span>
+        <button type="button" class="btn btn-sm btn-outline-primary" id="add-label-btn">+ 라벨 추가</button>
+      </div>
+      <div class="card-body" id="label-container">
+        <!-- 초기 분류(classification)용 한 줄 예시 (버튼 클릭 시 추가) -->
+        <div class="row g-3 align-items-end mb-3">
+          <div class="col-md-4">
+            <label class="form-label">레이블 이름</label>
+            <input type="text" name="label_name" class="form-control" placeholder="예: 긍정">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">레이블 설명</label>
+            <input type="text" name="label_desc" class="form-control" placeholder="예: 긍정적인 문장">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">순서</label>
+            <input type="number" name="label_order" class="form-control" min="0" value="0">
+          </div>
+          <div class="col-md-2">
+            <label class="form-label">삭제</label><br>
+            <button type="button" class="btn btn-danger btn-remove-label">삭제</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="labels-hierarchy" class="card mb-4 d-none">
+      <div class="card-header">계층형 라벨 입력 (JSON)</div>
+      <div class="card-body">
+        <textarea name="label_hierarchy" class="form-control" rows="8"
+          placeholder='예시: [{"name":"대분류A","children":[{"name":"중분류A1","children":[{"name":"소분류A1-1"}]}]}]'>{{ request.POST.label_hierarchy }}</textarea>
+        {% if hierarchy_error %}
+          <div class="text-danger mt-2">{{ hierarchy_error }}</div>
+        {% endif %}
+        <small class="form-text text-muted">JSON 형식으로 대→중→소… n단계 계층을 입력</small>
+      </div>
+    </div>
+    
+    <!-- 저장 버튼 -->
+    <div class="text-end">
+      <button type="submit" class="btn btn-success px-4">프로젝트 저장</button>
+    </div>
+  </form>
+</div>
+{% endblock %}
+
+{% block script %}
+<!-- Tagify 로드 -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
+<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const selectBox = document.querySelector("select[name='workers']");
+        const selectedContainer = document.getElementById("selected-workers");
+
+        const selectedIds = new Set();  // 중복 방지용
+
+        // 더블 클릭 시 작업자 추가
+        selectBox.addEventListener("dblclick", function (e) {
+            const option = e.target;
+            const userId = option.value;
+            const userName = option.textContent;
+
+            if (!userId || selectedIds.has(userId)) return;
+
+            selectedIds.add(userId);
+
+            const badge = document.createElement("div");
+            badge.className = "badge bg-primary text-white p-2 d-flex align-items-center";
+            badge.innerHTML = `
+                <span class="me-2">${userName}</span>
+                <button type="button" class="btn-close btn-close-white btn-sm ms-1" aria-label="Remove"></button>
+                <input type="hidden" name="workers" value="${userId}">
+            `;
+
+            badge.querySelector(".btn-close").addEventListener("click", function () {
+                selectedContainer.removeChild(badge);
+                selectedIds.delete(userId);
+            });
+
+            selectedContainer.appendChild(badge);
+        });
+    });
+</script>
+<script>
+  document.addEventListener('DOMContentLoaded', ()=>{
+    const selector = document.getElementById('taskTypeSelector');
+    const dyn = document.getElementById('labels-dynamic');
+    const hier = document.getElementById('labels-hierarchy');
+    function toggleLabelUI(){
+      if(selector.value==='hierarchy'){
+        dyn.classList.add('d-none');
+        hier.classList.remove('d-none');
+      } else {
+        dyn.classList.remove('d-none');
+        hier.classList.add('d-none');
+      }
+    }
+    selector.addEventListener('change', toggleLabelUI);
+    toggleLabelUI();
+  });
+</script>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const taskType = document.getElementById("taskTypeSelector");
+  const addLabelBtn = document.getElementById("add-label-btn");
+  const labelContainer = document.getElementById("label-container");
+
+  // 분류용 row
+  function createLabelRow() {
+    const row = document.createElement('div');
+    row.className = 'row g-3 align-items-end mb-3';
+    row.innerHTML = `
+      <div class="col-md-4">
+        <label class="form-label">레이블 이름</label>
+        <input type="text" name="label_name" class="form-control" placeholder="예: 긍정">
+      </div>
+      <div class="col-md-4">
+        <label class="form-label">레이블 설명</label>
+        <input type="text" name="label_desc" class="form-control" placeholder="예: 긍정적인 문장">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">순서</label>
+        <input type="number" name="label_order" class="form-control" min="0" value="0">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">삭제</label><br>
+        <button type="button" class="btn btn-danger btn-remove-label">삭제</button>
+      </div>
+    `;
+    row.querySelector('.btn-remove-label').addEventListener('click', () => row.remove());
+    return row;
+  }
+
+  // 평가용 row (Tagify 적용)
+  function createEvaluationLabelRow() {
+    const row = document.createElement('div');
+    row.className = 'row g-3 align-items-end mb-3';
+    row.innerHTML = `
+      <div class="col-md-3">
+        <label class="form-label">평가 항목</label>
+        <input type="text" name="label_name" class="form-control" placeholder="예: 정확성">
+      </div>
+      <div class="col-md-5">
+        <label class="form-label">점수 옵션</label>
+        <input type="text" name="label_options" class="form-control tagify-input" placeholder="예: 1,2,3,4,5">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">순서</label>
+        <input type="number" name="label_order" class="form-control" min="0" value="0">
+      </div>
+      <div class="col-md-2">
+        <label class="form-label">삭제</label><br>
+        <button type="button" class="btn btn-danger btn-remove-label">삭제</button>
+      </div>
+    `;
+    row.querySelector('.btn-remove-label').addEventListener('click', () => row.remove());
+
+    // Tagify 인스턴스 생성
+    const input = row.querySelector('.tagify-input');
+    new Tagify(input, { delimiters: ",", dropdown: { enabled: 0 } });
+
+    return row;
+  }
+
+  // 유형에 따라 초기 UI 설정
+  function applyLabelUIByTaskType() {
+    const type = taskType.value;
+    labelContainer.innerHTML = '';  // 초기화
+    addLabelBtn.disabled = false;
+
+    if (type === "classification") {
+      labelContainer.appendChild(createLabelRow());
+    } else if (type === "evaluation") {
+      labelContainer.appendChild(createEvaluationLabelRow());
+    } else if (type === "summary") {
+                addLabelBtn.disabled = true;
+
+                const fixedRow = document.createElement('div');
+                fixedRow.className = 'row g-3 align-items-end mb-3';
+                fixedRow.innerHTML = `
+                <div class="col-md-4">
+                    <label class="form-label">레이블 이름</label>
+                    <input type="text" name="label_name" class="form-control" value="summary" readonly>
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">레이블 설명</label>
+                    <input type="text" name="label_desc" class="form-control" value="요약 텍스트 입력용 라벨" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">순서</label>
+                    <input type="number" name="label_order" class="form-control" value="0" readonly>
+                </div>
+                <div class="col-md-2">
+                    <label class="form-label">삭제</label><br>
+                    <button type="button" class="btn btn-danger" disabled>삭제</button>
+                </div>
+            `;
+                labelContainer.appendChild(fixedRow);
+
+            } 
+            else {
+      // summary, compare 등은 별도 처리…
+      addLabelBtn.disabled = true;
+    }
+  }
+
+  // 이벤트 바인딩
+  taskType.addEventListener("change", applyLabelUIByTaskType);
+  addLabelBtn.addEventListener("click", function () {
+    if (taskType.value === "classification") {
+      labelContainer.appendChild(createLabelRow());
+    } else if (taskType.value === "evaluation") {
+      labelContainer.appendChild(createEvaluationLabelRow());
+    }
+  });
+
+  // 페이지 로드 시 초기화
+  applyLabelUIByTaskType();
+});
+</script>
+{% endblock %}

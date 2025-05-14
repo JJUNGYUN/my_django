@@ -1,0 +1,52 @@
+{% extends 'base.html' %}
+
+{% load custom_filters %}
+{% load mathfilters %}
+{% block content %}
+
+<div class="container-fluid">
+  <!-- 상단: 새 프로젝트 버튼 + 검색 폼 -->
+  <div class="d-flex align-items-center mb-3 px-2">
+    <a href="{% url 'label_studio:create' %}" class="btn btn-sm hit-btn-outline-dark">+ 새 프로젝트</a>
+    <div class="flex-grow-1 me-2">
+      {% include "partials/search_form.html" %}
+    </div>
+  </div>
+
+  <!-- 카드 리스트 -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+    {% for project in project_list %}
+    <div class="col">
+      <div class="card h-100 position-relative" style="cursor: pointer;">
+        <div class="card-body d-flex flex-column justify-content-between">
+
+          <!-- 제목 -->
+          <h4 class="card-title text-truncate" title="{{ project.title }}"
+              style="max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.4;">
+            {{ project.title }}
+          </h4>
+
+          <!-- 작성자 / 분류 / 날짜 -->
+          <div class="card__content d-flex justify-content-between align-items-center flex-wrap mb-2">
+            <div class="d-flex flex-column small text-muted">
+              <span>책임자: {{ project.owner.username }}</span>
+              <span>테스크: {{ project.task_type }}</span>
+            </div>
+            <div class="text-muted small">
+              시작일 : {{ project.start_date }}
+              <br>
+              종료일 : {{ project.end_date }}
+            </div>
+          </div>
+          <!-- 링크 전체 카드화 -->
+          <a href="{% url 'label_studio:project' project.id %}" class="stretched-link" aria-label="{{ project.title }}"></a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% include "partials/pagination.html" with page_obj=project_list %}
+
+{% endblock content %}

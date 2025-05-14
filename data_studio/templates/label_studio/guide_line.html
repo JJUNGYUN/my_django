@@ -1,0 +1,62 @@
+<style>
+    .guideline-panel-bottom {
+        position: fixed;
+        bottom: 0;
+        /* 화면 좌우 끝에 붙지 않고 중앙으로 */
+        left: 50%;
+        transform: translateX(-50%);
+        /* container 클래스가 지정하는 max-width를 따라가도록 */
+        width: 100%;
+        /* 필요하다면 sm, lg breakpoint 에 맞춰 조정하세요 */
+        max-height: 40vh;
+        background-color: #fff;
+        border-top: 1px solid #ccc;
+        padding: 15px;
+        box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+        overflow-y: auto;
+        z-index: 1050;
+        transition: transform 0.3s ease-in-out;
+    }
+    .guideline-toggle-btn {
+        position: fixed;
+        bottom: 10px;
+        right: 20px;
+        z-index: 1060;
+    }
+    </style>
+    
+
+<!-- guide_line.html -->
+<div id="guidelinePanel" class="guideline-panel-bottom d-none">
+    <label class="form-label fw-bold">💬 작업자 코멘트 (선택)</label>
+    <textarea class="form-control mb-2" name="comment" rows="2"
+              placeholder="이 데이터에 대해 이슈가 있다면 작성해주세요.">{{ comment }}</textarea>
+
+    <div class="d-flex justify-content-between align-items-center mb-2">
+        <strong>📘 가이드라인</strong>
+        <button type="button" class="btn-close btn-sm" aria-label="닫기"
+                onclick="toggleGuideline()"></button>
+    </div>
+
+    <div class="guideline-content small mb-3" id="guidelineContent">
+        로딩 중...
+    </div>
+</div>
+
+
+
+<script>
+    function toggleGuideline() {
+        const panel = document.getElementById('guidelinePanel');
+        panel.classList.toggle('d-none');
+    
+        if (!panel.classList.contains('d-none') && !panel.dataset.loaded) {
+            fetch("{% url 'label_studio:guideline_summary' project.id %}")
+                .then(res => res.text())
+                .then(text => {
+                    document.getElementById('guidelineContent').innerText = text;
+                    panel.dataset.loaded = "true";
+                });
+        }
+    }
+    </script>

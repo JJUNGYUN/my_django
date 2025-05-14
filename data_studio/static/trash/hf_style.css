@@ -329,7 +329,6 @@
     }
 
     ol,
-    ul,
     menu {
         list-style: none
     }
@@ -460,6 +459,7 @@
     }
 
     ::file-selector-button {
+        
         -webkit-appearance: button;
         -moz-appearance: button;
         appearance: button
@@ -3972,28 +3972,6 @@
             --tw-gradient-from: var(--color-gray-700);
             --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from)var(--tw-gradient-from-position), var(--tw-gradient-to)var(--tw-gradient-to-position))
         }
-    }
-
-    .btn {
-        cursor: pointer;
-        border-radius: var(--radius-lg);
-        border-style: var(--tw-border-style);
-        padding-inline: calc(var(--spacing)*3);
-        padding-block: calc(var(--spacing)*1);
-        white-space: nowrap;
-        -webkit-user-select: none;
-        user-select: none;
-        border-width: 1px;
-        border-color: var(--color-gray-200);
-        --tw-gradient-position: to bottom in oklab;
-        background-image: linear-gradient(var(--tw-gradient-stops));
-        --tw-gradient-from: var(--color-white);
-        --tw-gradient-stops: var(--tw-gradient-via-stops, var(--tw-gradient-position), var(--tw-gradient-from)var(--tw-gradient-from-position), var(--tw-gradient-to)var(--tw-gradient-to-position));
-        --tw-gradient-to: var(--color-gray-100);
-        color: var(--color-gray-800);
-        justify-content: center;
-        align-items: center;
-        display: inline-flex
     }
 
     .btn:focus {

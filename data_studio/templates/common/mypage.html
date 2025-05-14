@@ -1,0 +1,163 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters%}
+{% block content %}
+
+<div class="container my-5">
+    <h2 class="mb-4">마이 페이지</h2>
+
+    <!-- 2) LLM Models 목록 -->
+    <!-- 1) 내 모델 섹션 -->
+<!-- 1) 내 모델 섹션 (테이블) -->
+<section id="my-models" class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">내 모델</h4>
+      <a href="{% url 'models:new_model' %}" class="btn btn-sm btn-outline-primary">+ 새 모델</a>
+    </div>
+  
+    {% if models_list %}
+      <div class="table-responsive">
+        <table class="manager-table">
+          <thead>
+            <tr>
+              <th>모델명</th>
+              <th>Task Type</th>
+              <th>태그</th>
+              <th>등록일</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for model in models_list %}
+            <tr class="clickable-row"
+                onclick="window.location.href='{% url 'models:detail' model.id %}';">
+              <td class="text-truncate" style="text-align: left;">{{ model.name }}</td>
+              <td style="text-align: left;">{{ model.task_type }}</td>
+              <td class="text-truncate" style="text-align: left;">
+                {% for tag in model.tag|split:"," %}
+                  <span class="badge bg-info text-dark me-1">{{ tag }}</span>
+                {% endfor %}
+              </td>
+              <td style="text-align: left;">{{ model.create_date|time_since_short }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">
+        아직 등록된 모델이 없습니다.
+        <a href="{% url 'models:new_model' %}">새 모델 추가</a>
+      </p>
+    {% endif %}
+  </section>
+  
+  <!-- 2) 내 데이터셋 섹션 (테이블) -->
+  <section id="my-datasets" class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="mb-0">내 데이터셋</h4>
+      <a href="{% url 'datasets:new_dataset' %}" class="btn btn-sm btn-outline-primary">+ 새 데이터셋</a>
+    </div>
+  
+    {% if datasets_list %}
+      <div class="table-responsive">
+        <table class="manager-table">
+          <thead>
+            <tr>
+              <th>데이터셋명</th>
+              <th>분야</th>
+              <th>태그</th>
+              <th>등록일</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for ds in datasets_list %}
+            <tr class="clickable-row"
+                onclick="window.location.href='{% url 'datasets:detail' ds.id %}';">
+              <td class="text-truncate" style="text-align: left;">{{ ds.name }}</td>
+              <td style="text-align: left;">{{ ds.task }}</td>
+              <td class="text-truncate" style="text-align: left;">
+                {% for tag in ds.tag|split:"," %}
+                  <span class="badge bg-info text-dark me-1">{{ tag }}</span>
+                {% endfor %}
+              </td>
+              <td style="text-align: left;">{{ ds.create_date|time_since_short }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="text-muted">
+        아직 추가하신 데이터셋이 없습니다.
+        <a href="{% url 'datasets:new_dataset' %}">새 데이터셋 추가</a>
+      </p>
+    {% endif %}
+  </section>
+  
+  
+      
+    <section class="mb-5">
+    <h4 class="mb-3">내 Label Studio 프로젝트</h4>
+    
+    {% if project_list %}
+        <div class="table-responsive">
+        <table class="manager-table">
+            <thead>
+            <tr>
+                <th>프로젝트명</th>
+                <th>기간</th>
+                <th>상태</th>
+                <th>작업 유형</th>
+            </tr>
+            </thead>
+            <tbody>
+            {% for prj in project_list %}
+            <tr class="clickable-row"
+                onclick="window.location.href='{% url 'label_studio:project' prj.id %}';">
+                <td class="text-truncate">{{ prj.title }}</td>
+                <td style="text-align: left;">{{ prj.start_date }} ~ {{ prj.end_date }}</td>
+                <td style="text-align: left;">{{ prj.get_task_status_display }}</td>
+                <td style="text-align: left;">{{ prj.task_type }}</td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    {% else %}
+        <p class="text-muted">아직 생성하신 프로젝트가 없습니다.</p>
+    {% endif %}
+    </section>
+      
+      
+  
+
+
+
+
+    <!-- 1) Playground 목록 -->
+    <section class="mb-5">
+        <h4 class="mb-3">내 Playground</h4>
+        {% if playground_list %}
+        <div class="row row-cols-1 row-cols-md-2 g-4">
+            {% for play in playground_list %}
+            <div class="col">
+                <div class="card h-100 shadow-sm">
+                    <div class="card-body">
+                        <h5 class="card-title text-truncate">{{ play.llm_model.name }} ({{ play.playtype }})</h5>
+                        <p class="card-text mb-1"><strong>서버:</strong> {{ play.server }} | <strong>GPU:</strong> {{
+                            play.gpu_index }}</p>
+                        <p class="card-text mb-1"><strong>도커명:</strong> {{ play.docker_name }}</p>
+                        <p class="card-text mb-1"><strong>상태:</strong> {{ play.status }}</p>
+                        <p class="card-text"><small class="text-muted">시작: {{ play.start_time }}<br>종료: {{ play.end_time
+                                }}</small></p>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="text-muted">아직 생성하신 Playground가 없습니다.</p>
+        {% endif %}
+    </section>
+</div>
+{% endblock %}

@@ -8,6 +8,7 @@ class LM_models(models.Model):
     parameter_size = models.CharField(max_length=64)
     weight_path = models.CharField(max_length=128)
     tag = models.CharField(max_length=512)
+    task_type = models.CharField(max_length=512, blank=True, null=True,)
     file_size = models.CharField(max_length=64)
     create_date = models.DateTimeField()
     # 베이스 모델도 추가하고 싶어라

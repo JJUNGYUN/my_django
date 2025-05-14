@@ -1,0 +1,79 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load mathfilters %}
+
+{% block content %}
+
+<div class="container-fluid">
+
+  <!-- 상단 버튼 + 검색 -->
+  <div class="d-flex align-items-center mb-3 px-2">
+    <a href="{% url 'playground:new_playground' %}" class="btn btn-sm hit-btn-outline-dark">+ 새 플레이그라운드</a>
+    <div class="flex-grow-1 me-2">
+      {% include "partials/search_form.html" %}
+    </div>
+  </div>
+
+  <!-- 카드 리스트 -->
+  <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-3">
+    {% for playground in playground_list %}
+    <div class="col">
+      <div class="card h-100 position-relative">
+        <!-- 삭제 버튼 -->
+        <form method="post"
+              action="{% url 'playground:delete' playground.id %}"
+              class="delete-form">
+          {% csrf_token %}
+          <button type="submit"
+                  class="btn-close delete-btn"
+                  aria-label="삭제"></button>
+        </form>
+      
+        <div class="card-body d-flex flex-column justify-content-between position-relative">
+          <!-- 타이틀 -->
+          <h4 class="card-title text-truncate" title="{{ playground.llm_model }}">
+            {{ playground.llm_model }}
+          </h4>
+      
+          <!-- 메타 정보 -->
+          <div class="small text-muted mb-2">
+            <div>작성자: {{ playground.author }}</div>
+            <div>서버: {{ playground.server }}</div>
+            <div>포트: {{ playground.triton_port }}</div>
+            <div>GPU: {{ playground.gpu_index }}</div>
+          </div>
+      
+          <!-- 카드 전체를 누르면 상세로 -->
+          <a href="{% url 'playground:detail' playground.id %}"
+             class="stretched-link"
+             aria-label="{{ playground.llm_model }}"></a>
+        </div>
+      </div>
+      
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<style>
+  /* 1) Make sure the stretched-link’s “click layer” sits just beneath normal content */
+.stretched-link::after {
+  z-index: 1;
+}
+
+/* 2) Push the delete button above it */
+.delete-btn {
+  position: relative;    /* create new stacking context */
+  z-index: 2;
+}
+
+/* 3) (Optional) if your form wrapper needs it too */
+.delete-form {
+  position: relative;
+  z-index: 2;
+}
+
+</style>
+<!-- 공통 페이징 -->
+{% include "partials/pagination.html" with page_obj=playground_list %}
+
+{% endblock content %}

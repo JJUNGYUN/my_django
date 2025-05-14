@@ -3,8 +3,6 @@
 {% load custom_filters %}
 {% load mathfilters %}
 {% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
 <!-- 정적 파일로 변경된 jQuery / jQuery UI 링크 -->
 <script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
 <link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
@@ -26,7 +24,7 @@
         <form class="needs-validation"
         action="{% url 'model_dashboard:add_eval_result' benchmark.id %}"
         method="post"
-        enctype="multipart/form-data"  <!-- ✅ 여기에 추가 -->
+        enctype="multipart/form-data" 
         novalidate>
   
     {% include "form_errors.html" %}
@@ -37,7 +35,7 @@
   
       <div class="col-sm-12">
         <label for="model_name" value="{{ form.model_name.value|default_if_none:'' }}" class="form-label">모델 이름 </label>
-        <input type="text" id="model_name" name="model_name" class="form-control" placeholder="모델 탭의 데이터와 연동" required>
+        <input type="text" id="model-input" name="model_name" class="form-control" placeholder="모델 탭의 데이터와 연동" required>
         <div class="invalid-feedback">
           모델 탭의 모델을 입력해주세요
         </div>

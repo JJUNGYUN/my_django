@@ -1,0 +1,139 @@
+/**
+ * prism.js tomorrow night eighties for JavaScript, CoffeeScript, CSS and HTML
+ * Based on https://github.com/chriskempson/tomorrow-theme
+ * @author Rose Pritchard
+ */
+
+code[class*="language-"],
+pre[class*="language-"] {
+	color: #383a42;
+	background: none;
+	font-family: Consolas, Monaco, 'Andale Mono', 'Ubuntu Mono', monospace;
+	font-size: 1em;
+	text-align: left;
+	white-space: pre;
+	word-spacing: normal;
+	word-break: normal;
+	word-wrap: normal;
+	line-height: 1.5;
+
+	-moz-tab-size: 4;
+	-o-tab-size: 4;
+	tab-size: 4;
+
+	-webkit-hyphens: none;
+	-moz-hyphens: none;
+	-ms-hyphens: none;
+	hyphens: none;
+
+}
+
+pre code span {
+	white-space: pre-wrap;
+	word-break: break-word;
+	overflow-wrap: anywhere;
+  }
+
+/* Code blocks */
+pre[class*="language-"] {
+	
+	padding: 1em;
+	margin: .5em 0;
+	overflow: auto;
+}
+
+:not(pre) > code[class*="language-"],
+pre[class*="language-"] {
+	position: relative;
+	margin: 1em 0;
+	border-radius: 6px;
+	overflow: hidden;
+	background: #f7f7f8;
+	font-family: SFMono-Regular, Consolas, Menlo, monospace;
+	box-shadow: 0 0 0 1px #e0e0e0;
+}
+
+/* Inline code */
+:not(pre) > code[class*="language-"] {
+	padding: .1em;
+	border-radius: .3em;
+	white-space: normal;
+}
+
+.token.comment,
+.token.block-comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+	color: #6a737d; /* dimmed gray */
+	font-style: italic;
+}
+
+.token.punctuation {
+	color: #d1d5da; /* light gray */
+}
+.token.operator {
+	color: #383a42;
+}
+
+.token.tag,
+.token.attr-name,
+.token.namespace,
+.token.deleted {
+	color: #f97583; /* red-pink for tags */
+}
+
+.token.function-name {
+	color: #4078f2; /* light blue */
+}
+
+.token.boolean,
+.token.function {
+	color: #4078f2; /* warm orange */
+}
+
+.token.property,
+.token.class-name,
+.token.constant,
+.token.symbol {
+	color: #b392f0; /* violet */
+}
+
+.token.selector,
+.token.important,
+.token.atrule,
+.token.keyword,
+.token.builtin {
+	color: #a626a4; /* coral */
+}
+
+.token.string,
+.token.char,
+.token.attr-value,
+.token.regex,
+.token.number,
+.token.variable {
+	color: #50a14f; /* soft sky blue */
+}
+
+.token.entity,
+.token.url {
+	color: #cdd9e5; /* almost white */
+}
+
+.token.important,
+.token.bold {
+	font-weight: bold;
+}
+.token.italic {
+	font-style: italic;
+}
+
+.token.entity {
+	cursor: help;
+}
+
+.token.inserted {
+	color: #85e89d; /* soft green */
+}
+

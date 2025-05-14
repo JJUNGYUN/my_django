@@ -11,4 +11,5 @@ urlpatterns = [
     path('dataset/modify/<int:dataset_id>', views.dataset_modify, name='dataset_modify'),
     path('dataset/delete/<int:dataset_id>', views.dataset_delete, name='dataset_delete'),
     path('dataset/data_studio/<int:dataset_id>/', views.data_studio, name='data_studio'),
+    path('<int:dataset_id>/update_readme/', views.update_readme, name='readme_update'),
 ]
