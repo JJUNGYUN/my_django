@@ -595,8 +595,24 @@ def submit_work_view(request, project_id):
         }
     elif task == "hierarchy":
         # form에서 name="path" 로 온 모든 값을 리스트로 가져옵니다
-        path_ids = request.POST.getlist('path')
-        result_data = {'path': path_ids}
+        # 1) POST 로 넘어온 JSON 문자열 파싱
+        raw = request.POST.get('path', '[]')
+        try:
+            path_ids = json.loads(raw)
+            # 문자열로 넘어오는 경우도 int 로 변환
+            path_ids = [int(x) for x in path_ids]
+        except Exception:
+            path_ids = []
+
+        # 2) Label 모델에서 id → name 매핑
+        labels = Label.objects.filter(id__in=path_ids)
+        id_to_name = {lbl.id: lbl.name for lbl in labels}
+
+        # 3) 순서를 유지하며 이름 리스트로 변환
+        path_names = [id_to_name[i] for i in path_ids if i in id_to_name]
+
+        # 4) result_data 에 이름 리스트 저장
+        result_data = {'label': path_names}
     else:  # compare
         result_data = {"label": request.POST.get("selected_output")}
 

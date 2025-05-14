@@ -289,6 +289,14 @@
                                       </span>
                                     {% endfor %}
                                 </div>
+                                {% elif project.task_type == "hierarchy" %}
+                                <div class="d-flex flex-wrap gap-1">
+                                    {% for val in result.result.label %}
+                                      <span class="badge bg-primary-subtle text-dark">
+                                        <strong>{{ val }}</strong>
+                                      </span>
+                                    {% endfor %}
+                                </div>
                                 {% elif project.task_type == "summary" %}
                                 <span class="text-muted small">{{ result.result.summary }}</span>
                                 {% endif %}
