@@ -30,22 +30,40 @@
 
                 <div class="mb-3">
                     <label class="form-label">프로젝트 설명</label>
-                    <textarea name="description" class="form-control" rows="3" placeholder="설명"></textarea>
+                    <textarea name="description"
+                              class="form-control"
+                    >{{ form.description.value|default_if_none:'' }}</textarea>
+                    {% if form.description.errors %}
+                      <div class="text-danger small">{{ form.description.errors.as_text|linebreaksbr }}</div>
+                    {% endif %}
                 </div>
                 <div class="row">
                     <div class="col-md-6 mb-3">
                         <label class="form-label">시작일</label>
-                        <input type="date" name="start_date" class="form-control">
+                        <!-- 시작일 -->
+                        <input type="date" name="start_date" class="form-control"
+                        value="{{ form.start_date.value|default_if_none:'' }}">
+                        {% if form.start_date.errors %}
+                        <div class="text-danger small">{{ form.start_date.errors.as_text|linebreaksbr }}</div>
+                        {% endif %}
                     </div>
                     <div class="col-md-6 mb-3">
                         <label class="form-label">마감일</label>
-                        <input type="date" name="end_date" class="form-control">
+                        <!-- 마감일 -->
+                        <input type="date" name="end_date" class="form-control"
+                        value="{{ form.end_date.value|default_if_none:'' }}">
+                        {% if form.end_date.errors %}
+                        <div class="text-danger small">{{ form.end_date.errors.as_text|linebreaksbr }}</div>
+                        {% endif %}
                     </div>
                 </div>
             </div>
         </div>
 
         <!-- 작업 타입 -->
+        {% if form.task_type.errors %}
+          <div class="text-danger middle">{{ form.task_type.errors.as_text|linebreaksbr }}</div>
+        {% endif %}
         <div class="card mb-4">
           <div class="card-header">작업 유형</div>
           <div class="card-body">
@@ -122,9 +140,6 @@
 {% endblock %}
 
 {% block script %}
-<!-- Tagify 로드 -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@yaireo/tagify/dist/tagify.css">
-<script src="https://cdn.jsdelivr.net/npm/@yaireo/tagify"></script>
 
 <script>
     document.addEventListener("DOMContentLoaded", function () {
