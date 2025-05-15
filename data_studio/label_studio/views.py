@@ -14,6 +14,7 @@ from django.views.decorators.http import require_POST
 from .forms import ProjectCreateForm
 from .models import Project, Assignment, WorkResult, InputData, Label
 
+from dateutil.relativedelta import relativedelta
 import os
 import json
 
@@ -231,15 +232,32 @@ def modify_project_view(request, project_id):
     if project.owner != request.user:
         messages.error(request, "수정 권한이 없습니다.")
         return redirect('label_studio:project_detail', project_id=project.id)
-
+    print(request.POST)
     # 값 업데이트
     project.description = request.POST.get("description", "")
     project.start_date = parse_date(request.POST.get("start_date"))
     project.end_date = parse_date(request.POST.get("end_date"))
     project.task_status = request.POST.get("task_status", project.task_status)
+    project.guideline = request.POST.get('guideline', '')
 
     project.save()
     messages.success(request, "프로젝트 정보가 저장되었습니다.")
+    return redirect("label_studio:project_detail", project_id=project.id)
+
+@require_POST
+@login_required
+def modify_guideline_view(request, project_id):
+    project = get_object_or_404(Project, id=project_id)
+
+    # 권한 체크 (owner만 수정 가능)
+    if project.owner != request.user:
+        messages.error(request, "수정 권한이 없습니다.")
+        return redirect('label_studio:project_detail', project_id=project.id)
+    # 값 업데이트
+    project.guideline = request.POST.get('guideline', '')
+    project.save()
+
+    messages.success(request, "가이드 라인이 저장되었습니다.")
     return redirect("label_studio:project_detail", project_id=project.id)
 
 @login_required
@@ -290,6 +308,7 @@ def sync_workers_view(request, project_id):
 @login_required
 def project_create_view(request):
     if request.method == 'POST':
+        print(request.POST)
         form = ProjectCreateForm(request.POST)
         if form.is_valid():
             # 1) 프로젝트 생성
@@ -361,13 +380,23 @@ def project_create_view(request):
 
             return redirect('label_studio:index')
     else:
-        form = ProjectCreateForm()
-
+        today = timezone.localdate()
+        one_month_later = today + relativedelta(months=1)
+        # Python date 객체 대신 ISO 포맷 문자열로
+        form = ProjectCreateForm(initial={
+            'start_date': today.isoformat(),        # "2025-05-15"
+            'end_date':   one_month_later.isoformat(),
+        })
     users = User.objects.all()
+    # GET/POST 상관없이 owner ID는 무조건 포함
+    sel = request.POST.getlist('workers') if request.method == 'POST' else []
+    owner_id = str(request.user.id)
+    if owner_id not in sel:
+        sel.insert(0, owner_id)
     return render(request, 'label_studio/create_project.html', {
         'form': form,
         'users': users,
-        'selected_worker_ids': request.POST.getlist('workers') if request.method == 'POST' else []
+        'selected_worker_ids': sel,
     })
 
 @require_POST
@@ -718,36 +747,11 @@ def get_work_context(request, project, task_field_name):
         "comment": existing.comment if existing else "",
     }
 
-TEST = """
-CTranslate2 Backend for Triton Inference Server
-This is a backend based on CTranslate2 for NVIDIA's Triton Inference Server, which can be used to deploy translation and language models supported by CTranslate2 on Triton with both CPU and GPU capabilities.
-
-It supports ragged and dynamic batching and setting of (a subset of) CTranslate decoding parameters in the model config.
-
-Building
-Make sure to have cmake installed on your system.
-
-Build and install CTranslate2: https://opennmt.net/CTranslate2/installation.html#compile-the-c-library
-Build the backend
-mkdir build && cd build
-export BACKEND_INSTALL_DIR=$(pwd)/install
-cmake .. -DCMAKE_BUILD_TYPE=Release -DTRITON_ENABLE_GPU=1 -DCMAKE_INSTALL_PREFIX=$BACKEND_INSTALL_DIR
-make install
-This builds the backend into $BACKEND_INSTALL_DIR/backends/ctranslate2.
-
-Setting up the backend
-First install the pip package to convert models: pip install ctranslate2. Then create a model repository, which consists of a configuration (config.pbtxt) and the converted model.
-
-For example for the Helsinki-NLP/opus-mt-en-de HuggingFace transformer model, create a new directory e.g. mkdir $MODEL_DIR/opus-mt-en-de. The model needs to be moved into a directory called model that is nested in a folder specifying a numerical version of the model:"""
 
 def guideline_view(request, project_id):
     project = get_object_or_404(Project, id=project_id)
 
-    guideline_path = project.guideline_path
-    if not guideline_path or not os.path.exists(guideline_path):
-        return HttpResponse(TEST, content_type="text/plain")
+    guideline = project.guideline
 
-    with open(guideline_path, "r", encoding="utf-8") as f:
-        content = f.read()
     
-    return HttpResponse(content, content_type="text/plain")
+    return HttpResponse(guideline, content_type="text/plain")

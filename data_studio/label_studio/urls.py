@@ -25,6 +25,8 @@ urlpatterns = [
     path("project/<int:project_id>/remove-worker/<int:user_id>/", views.remove_worker_view, name="remove_worker"),
     path("project/<int:project_id>/sync-workers/", views.sync_workers_view, name="sync_workers"),
     path("project/<int:project_id>/modify/", views.modify_project_view, name="modify_project"),
+    path("project/<int:project_id>/modify_guideline/", views.modify_guideline_view, name="modify_guideline"),
+
     path("project/<int:project_id>/delete/", views.delete_project, name="delete_project"),
     path("create/", views.project_create_view, name="create"),  # 선택 사항
 

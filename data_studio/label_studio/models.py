@@ -18,7 +18,7 @@ class Project(models.Model):
     end_date = models.DateField()
     task_type = models.CharField(max_length=50)  # ex) 'binary', 'multiclass', 'summary'
     task_status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')  # ✅ 추가
-    guideline_path = models.CharField(max_length=512, blank=True, null=True)  # ✅ 추가: 가이드라인 파일 경로
+    guideline = models.CharField(max_length=4096, blank=True, null=True)  # ✅ 추가: 가이드라인 파일 경로
     workers = models.ManyToManyField(User, through='Assignment', related_name='projects')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

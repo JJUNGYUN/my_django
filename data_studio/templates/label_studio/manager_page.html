@@ -122,6 +122,18 @@
         </li>
         {% endif %}
         <li class="nav-item" role="presentation">
+            <button class="nav-link px-4 py-2" 
+                    id="guideline-tab" 
+                    data-bs-toggle="tab" 
+                    data-bs-target="#guideline" 
+                    type="button" 
+                    role="tab"
+                    aria-controls="guideline"
+                    aria-selected="false">
+              가이드라인
+            </button>
+          </li>
+        <li class="nav-item" role="presentation">
             <button class="nav-link px-4 py-2" id="work-tab" data-bs-toggle="tab" data-bs-target="#work" type="button"
                 role="tab">내 작업</button>
         </li>
@@ -509,6 +521,21 @@
             </div>
         </div>
         {% endif %}
+        <!-- 가이드라인 탭 -->
+        <div class="tab-pane fade border-0 p-4" id="guideline" role="tabpanel" aria-labelledby="guideline-tab">
+
+            <form method="post" action="{% url 'label_studio:modify_guideline' project.id %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label for="guideline" class="form-label">프로젝트 가이드라인</label>
+                    <textarea id="guideline" name="guideline" class="form-control" rows="8"
+                        placeholder="가이드라인 내용을 입력하세요…">{{ project.guideline }}</textarea>
+                </div>
+                <button type="submit" class="btn btn-success">저장</button>
+            </form>
+
+        </div>
+
         <div class="tab-pane fade border-0" id="work" role="tabpanel">
             <div class="label-card shadow-sm p-4 mb-4 rounded-3">
                 <!-- 3) 작업 결과 & 남은 데이터 테이블 -->
