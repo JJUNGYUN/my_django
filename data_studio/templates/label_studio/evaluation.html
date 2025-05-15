@@ -87,11 +87,12 @@
                         <!-- /입력/출력 아코디언 -->
 
                         <!-- 스코어 선택 -->
+                        
                         {% for label in labels %}
                         <div class="mb-3">
                             <label class="form-label fw-bold">{{ label.name }}</label>
                             <div class="btn-group" role="group" aria-label="{{ label.name }}">
-                                {% with selected_scores|get_item:label.name as current_score %}
+                                {% with selected_scores.label|get_item:label.name as current_score %}
                                     {% for opt in label.description|split:"," %}
                                         {% with opt|trim as v %}
                                             <input type="radio"

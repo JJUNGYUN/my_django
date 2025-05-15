@@ -277,7 +277,7 @@
                                 {% elif project.task_type == "hierarchy" %}
                                     {{ result.input_data.data.input|truncatechars:50 }}
                                 {% else %}
-                                    {{ result.input_data.data.text|truncatechars:50 }}
+                                    {{ result.input_data.data.input|truncatechars:50 }}
                                 {% endif %}
                             </td>
                             <td>
@@ -317,9 +317,9 @@
                                     <p><strong>Output A:</strong><br>{{ result.input_data.data.output_a|linebreaksbr }}</p>
                                     <p><strong>Output B:</strong><br>{{ result.input_data.data.output_b|linebreaksbr }}</p>
                                     {% elif project.task_type == "summary" %}
-                                    <p><strong>Text:</strong><br>{{ result.input_data.data.text|linebreaksbr }}</p>
+                                    <p><strong>Text:</strong><br>{{ result.input_data.data.input|linebreaksbr }}</p>
                                     {% else %}
-                                    <p><strong>Text:</strong><br>{{ result.input_data.data.text|linebreaksbr}}</p>
+                                    <p><strong>Text:</strong><br>{{ result.input_data.data.input|linebreaksbr}}</p>
                                     {% endif %}
                             </td>
                         </tr>
@@ -534,25 +534,26 @@
                                 </thead>
                                 <tbody>
                                     {% for result in work_results %}
+                                    
                                     <tr class="expand-trigger" style="cursor:pointer;">
                                         <td>#{{ result.input_data.order }}</td>
                                         <td>{{ result.worker.username }}</td>
                                         <td class="text-truncate" style="max-width:300px;"
                                             title="{{ result.input_data.data.input }}">
                                             {% if project.task_type == "evaluation" %}
-                                            <span class="badge bg-info text-dark">in</span>
-                                            {{ result.input_data.data.input|truncatechars:50 }}<br>
-                                            <span class="badge bg-info text-dark">out</span>
-                                            {{ result.input_data.data.output|truncatechars:50 }}
+                                                <span class="badge bg-info text-dark">in</span>
+                                                {{ result.input_data.data.input|truncatechars:50 }}<br>
+                                                <span class="badge bg-info text-dark">out</span>
+                                                {{ result.input_data.data.output|truncatechars:50 }}
                                             {% elif project.task_type == "compare" %}
-                                            <span class="badge bg-info text-dark">in</span>
-                                            {{ result.input_data.data.input|truncatechars:50 }}<br>
-                                            <span class="badge bg-primary text-dark">A</span>
-                                            {{ result.input_data.data.output_a|truncatechars:50 }}<br>
-                                            <span class="badge bg-success text-dark">B</span>
-                                            {{ result.input_data.data.output_b|truncatechars:50 }}
+                                                <span class="badge bg-info text-dark">in</span>
+                                                {{ result.input_data.data.input|truncatechars:50 }}<br>
+                                                <span class="badge bg-primary text-dark">A</span>
+                                                {{ result.input_data.data.output_a|truncatechars:50 }}<br>
+                                                <span class="badge bg-success text-dark">B</span>
+                                                {{ result.input_data.data.output_b|truncatechars:50 }}
                                             {% else %}
-                                            {{ result.input_data.data.text|truncatechars:50 }}
+                                                {{ result.input_data.data.input|truncatechars:50 }}
                                             {% endif %}
                                         </td>
                                         <td>
@@ -593,7 +594,7 @@
                                             <p><strong>B:</strong><br>{{ result.input_data.data.output_b|linebreaksbr }}
                                             </p>
                                             {% else %}
-                                            <p><strong>Text:</strong><br>{{ result.input_data.data.text|linebreaksbr }}
+                                            <p><strong>Text:</strong><br>{{ result.input_data.data.input|linebreaksbr }}
                                             </p>
                                             {% endif %}
                                         </td>
@@ -635,9 +636,9 @@
                                     {% for inp in remaining_inputs %}
                                     <tr>
                                         <td>#{{ inp.order }}</td>
-                                        {% with txt=inp.data|dict_get:"text" inp=inp.data|dict_get:"input" %}
+                                        {% with inp=inp.data|dict_get:"input" %}
                                         <td class="text-truncate"
-                                            title="{% if txt %}{{ txt }}{% else %}{{ inp }}{% endif %}">
+                                            title="{{ inp }}">
                                             {{ txt|default:inp|truncatechars:50 }}
                                         </td>
                                         {% endwith %}

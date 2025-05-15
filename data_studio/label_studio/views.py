@@ -541,9 +541,7 @@ def move_work_page_view(request, project):
                 roots.append(nodes[lbl.id])
 
         # 기존 저장값 꺼내오기
-        prev = ctx.pop('result_value',{}) or {}
-        selected_path = prev.get('path', [])
-
+        selected_path = ctx.get('selected_path', [])
         ctx.update({
         'hierarchy': roots,
         'selected_path': selected_path,
@@ -588,11 +586,11 @@ def submit_work_view(request, project_id):
         result_data = {"summary": request.POST.get("summary")}
     elif task == "evaluation":
         labels = Label.objects.filter(project=project).order_by("order")
-        result_data = {
+        result_data = {"label":{
             lbl.name: request.POST.get(f"score_{lbl.name}")
             for lbl in labels
             if request.POST.get(f"score_{lbl.name}")
-        }
+        }}
     elif task == "hierarchy":
         # form에서 name="path" 로 온 모든 값을 리스트로 가져옵니다
         # 1) POST 로 넘어온 JSON 문자열 파싱
@@ -664,16 +662,38 @@ def get_work_context(request, project, task_field_name):
         return None
 
     # 기존 저장된 결과가 있으면 꺼내오고
+    
     existing = WorkResult.objects.filter(project=project, worker=user, input_data=input_data).first()
     if existing:
         if task_field_name == "dict":
             result_value = existing.result
         else:
             result_value = existing.result.get(task_field_name)
+        # — 기존에 선택된 경로(name 배열) → id 배열로 변환 —
+        raw_labels = existing.result.get('label', [])  # e.g. ["대분류B","중분류B1","소분류B1-1"]
+        # 프로젝트 전체 hierarchy 라벨을 미리 가져왔다고 가정
+        labels = Label.objects.filter(project=project, label_type='hierarchy')
+        name_to_id = {lbl.name: lbl.id for lbl in labels}
+        selected_path = [ name_to_id[name] for name in raw_labels if name_to_id.get(name) ]
     elif "summary" in input_data.data:
         result_value = input_data.data["summary"]
+        selected_path = []
+    elif "label" in input_data.data:
+        default_value = input_data.data
+        if task_field_name == "dict":
+            result_value = default_value
+        else:
+            result_value = default_value['label']
+            
+        # — 기존에 선택된 경로(name 배열) → id 배열로 변환 —
+        raw_labels = default_value.get('label', [])#default_value.get('label', [])  # e.g. ["대분류B","중분류B1","소분류B1-1"])
+        # 프로젝트 전체 hierarchy 라벨을 미리 가져왔다고 가정
+        labels = Label.objects.filter(project=project, label_type='hierarchy')
+        name_to_id = {lbl.name: lbl.id for lbl in labels}
+        selected_path = [ name_to_id[name] for name in raw_labels if name_to_id.get(name) ]
     else:
         result_value = ""
+        selected_path = []
 
     idx   = inputs.index(input_data) + 1
     done  = WorkResult.objects.filter(project=project, worker=user).values_list("input_data_id", flat=True).distinct().count()
@@ -686,7 +706,7 @@ def get_work_context(request, project, task_field_name):
     assignment.status       = "completed" if prog == 100 else "in_progress"
     assignment.last_updated = timezone.now()
     assignment.save()
-
+    
     return {
         "input_data": input_data,
         "result_value": result_value,
@@ -694,6 +714,7 @@ def get_work_context(request, project, task_field_name):
         "current_index": idx,
         "total_inputs": total,
         "is_last_input": is_last,
+        "selected_path": selected_path,
         "comment": existing.comment if existing else "",
     }
 

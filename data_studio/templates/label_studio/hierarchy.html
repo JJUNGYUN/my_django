@@ -102,6 +102,7 @@
 
             <!-- 액션 버튼 -->
             <div class="d-flex justify-content-between align-items-center mt-4 gap-2">
+              
               {% if current_index > 1 %}
                 <button type="button"
                         class="btn hit-btn-outline-primary"
@@ -133,13 +134,20 @@
   </form>
 </div>
 
+{{ selected_path|json_script:"selected-path-data" }}
 {{ hierarchy|json_script:"hier-data" }}
+
 <script>
-  const data = JSON.parse(document.getElementById('hier-data').textContent);
-  const prevPath = {{ selected_path|default:"[]"|safe }};
+  const prevPath = JSON.parse(
+    document.getElementById('selected-path-data')?.textContent || '[]'
+  );
+  const data     = JSON.parse(
+    document.getElementById('hier-data').textContent
+  );
+  console.log('prevPath:', prevPath, 'data:', data);
   const treeContainer = document.getElementById('hierarchy-tree');
-  const pathInput = document.getElementById('pathInput');
-  const breadcrumb = document.getElementById('breadcrumb');
+  const pathInput     = document.getElementById('pathInput');
+  const breadcrumb    = document.getElementById('breadcrumb');
 
   // 브레드크럼 업데이트
   function renderBreadcrumb(path) {
@@ -194,17 +202,18 @@
   // 초기 렌더
   treeContainer.appendChild(buildTree(data));
 
+  // 2) 기존 선택 경로가 있으면 펼치고 하이라이트
   if (prevPath.length) {
     pathInput.value = JSON.stringify(prevPath);
     renderBreadcrumb(prevPath);
-    // 프리뷰하이라이트 및 펼침
+
     let items = data;
     prevPath.forEach(id => {
-      const span = Array.from(treeContainer.querySelectorAll('span.node'))
-        .find(s => s.textContent === items.find(n => n.id == id).name);
+      const nodeInfo = items.find(n => n.id === id);
+      const spanList = Array.from(treeContainer.querySelectorAll('span.node'));
+      const span     = spanList.find(s => s.textContent === nodeInfo.name);
       if (span) span.click();
-      const node = items.find(n => n.id == id);
-      items = node?.children || [];
+      items = nodeInfo.children || [];
     });
   }
 

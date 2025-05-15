@@ -93,7 +93,7 @@
                                             <span class="badge bg-success text-dark">B</span>
                                             {{ result.input_data.data.output_b|truncatechars:50 }}
                                             {% else %}
-                                            {{ result.input_data.data.text|truncatechars:50 }}
+                                            {{ result.input_data.data.input|truncatechars:50 }}
                                             {% endif %}
                                         </td>
                                         <td>
@@ -134,7 +134,7 @@
                                             <p><strong>B:</strong><br>{{ result.input_data.data.output_b|linebreaksbr }}
                                             </p>
                                             {% else %}
-                                            <p><strong>Text:</strong><br>{{ result.input_data.data.text|linebreaksbr }}
+                                            <p><strong>Text:</strong><br>{{ result.input_data.data.input|linebreaksbr }}
                                             </p>
                                             {% endif %}
                                         </td>
