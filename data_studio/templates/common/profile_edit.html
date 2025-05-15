@@ -1,18 +1,21 @@
-{# templates/common/signup.html #}
+{# templates/common/profile_edit.html #}
 {% extends 'base.html' %}
 
 {% block content %}
 <div class="container my-5" style="max-width:500px;">
-  <div class="card shadow-sm">
-    <div class="card-header bg-white">
-      <h4 class="mb-0 text-primary">회원가입</h4>
+  <div class="label-card shadow-sm">
+    <!-- 카드 헤더 -->
+    <div class="label-card-header">
+      <h5 class="mb-0">프로필 편집</h5>
+      <small class="text-muted">사용자 ID: {{ request.user.id }}</small>
     </div>
-    <div class="card-body">
+
+    <!-- 카드 바디 -->
+    <div class="label-card-body">
       <form method="post" novalidate>
         {% csrf_token %}
-        {# 비밀번호 불일치 등 non-field 오류 #}
         {% if form.non_field_errors %}
-          <div class="alert alert-danger">
+          <div class="alert alert-danger mb-3">
             {{ form.non_field_errors }}
           </div>
         {% endif %}
@@ -21,77 +24,73 @@
         <div class="mb-3">
           <label for="id_first_name" class="form-label">한글 이름</label>
           <input type="text"
-                 name="first_name"
                  id="id_first_name"
+                 name="first_name"
                  class="form-control {% if form.first_name.errors %}is-invalid{% endif %}"
                  value="{{ form.first_name.value|default_if_none:'' }}"
-                 placeholder="예: 홍길동"
                  required>
           {% for err in form.first_name.errors %}
             <div class="invalid-feedback">{{ err }}</div>
           {% endfor %}
         </div>
 
-        <!-- 영문 닉네임 -->
+        
+        <!-- 한글 이름 -->
         <div class="mb-3">
-          <label for="id_last_name" class="form-label">영문 닉네임</label>
-          <input type="text"
-                 name="last_name"
-                 id="id_last_name"
-                 class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
-                 value="{{ form.last_name.value|default_if_none:'' }}"
-                 placeholder="예: honggd"
-                 required>
-          {% for err in form.last_name.errors %}
-            <div class="invalid-feedback">{{ err }}</div>
-          {% endfor %}
-        </div>
+            <label for="id_last_namee" class="form-label">영문 이름</label>
+            <input type="text"
+                   id="id_last_namee"
+                   name="last_name"
+                   class="form-control {% if form.last_name.errors %}is-invalid{% endif %}"
+                   value="{{ form.last_name.value|default_if_none:'' }}"
+                   required>
+            {% for err in form.last_name.errors %}
+              <div class="invalid-feedback">{{ err }}</div>
+            {% endfor %}
+          </div>
 
-        <!-- 로그인 ID -->
+        <!-- 아이디 (수정 불가) -->
         <div class="mb-3">
           <label for="id_username" class="form-label">로그인 ID</label>
           <input type="text"
-                 name="username"
                  id="id_username"
-                 class="form-control {% if form.username.errors %}is-invalid{% endif %}"
-                 value="{{ form.username.value|default_if_none:'' }}"
-                 placeholder="예: user123"
-                 required>
-          {% for err in form.username.errors %}
-            <div class="invalid-feedback">{{ err }}</div>
-          {% endfor %}
+                 class="form-control"
+                 value="{{ request.user.username }}"
+                 readonly>
         </div>
 
-        <!-- 비밀번호 -->
+        <!-- 비밀번호 변경 -->
         <div class="mb-3">
-          <label for="id_password1" class="form-label">비밀번호</label>
+          <label for="id_password1" class="form-label">새 비밀번호</label>
           <input type="password"
-                 name="password1"
                  id="id_password1"
+                 name="password1"
                  class="form-control {% if form.password1.errors %}is-invalid{% endif %}"
-                 placeholder="비밀번호"
-                 required>
+                 placeholder="변경할 새 비밀번호 입력">
+          {% if form.password1.help_text %}
+            <div class="form-text">{{ form.password1.help_text }}</div>
+          {% endif %}
           {% for err in form.password1.errors %}
             <div class="invalid-feedback">{{ err }}</div>
           {% endfor %}
         </div>
 
-        <!-- 비밀번호 확인 -->
         <div class="mb-4">
           <label for="id_password2" class="form-label">비밀번호 확인</label>
           <input type="password"
-                 name="password2"
                  id="id_password2"
+                 name="password2"
                  class="form-control {% if form.password2.errors %}is-invalid{% endif %}"
-                 placeholder="비밀번호 재입력"
-                 required>
+                 placeholder="새 비밀번호 재입력">
           {% for err in form.password2.errors %}
             <div class="invalid-feedback">{{ err }}</div>
           {% endfor %}
         </div>
 
-        <div class="d-grid">
-          <button type="submit" class="hit-btn-solid-primary">가입하기</button>
+        <!-- 액션 버튼 -->
+        <div class="d-flex justify-content-end gap-2">
+          <button type="submit" class="hit-btn-solid-primary">저장</button>
+          <a href="{% url 'common:mypage' %}" class="hit-btn-outline-dark">취소</a>
         </div>
       </form>
     </div>

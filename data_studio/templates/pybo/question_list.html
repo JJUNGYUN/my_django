@@ -13,7 +13,7 @@
           <div>
             <h5 class="mb-1">{{ question.subject }}</h5>
             <small class="text-muted">
-              By {{ question.author }} &bull;
+              By {{ question.author.first_name }} &bull;
               {{ question.create_date|date:"Y-m-d H:i" }}
             </small>
           </div>

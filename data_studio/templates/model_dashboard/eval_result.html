@@ -1,47 +1,134 @@
-{% extends 'base.html' %}
-{% block content %}
-{% load markdown_extras %}
-{% load custom_filters %}
-{% load mathfilters %}
-{% load static %}
-<link rel="stylesheet" type="text/css" href="{% static 'hf.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'hf_style.css' %}">
+{# templates/model_dashboard/add_result.html #}
+{% load markdown_extras custom_filters mathfilters static %}
 
-<table class="w-full table-auto rounded-lg font-mono text-xs text-gray-900">
-    <thead class="shadow-xs sticky left-0 right-0 top-0 z-1 bg-white align-top">
-        
-        <tr class="space-y-54 h-full min-w-fit divide-x border-b text-left">
-            {% for key in sample_data.1.keys %}
-                <th class="h-full max-w-sm p-2 text-left  relative w-auto">
-                    <div class="flex h-full flex-col flex-nowrap justify-between">
-                        <div class="flex items-center justify-between">
-                            {{key}}
-                        </div>
-                    </div>
-                </th>
-            {% endfor %}
-        </tr>
-    </thead>
-    <tbody class="h-16 overflow-scroll">
-        {% for key, values in sample_data.items %}
-        <tr class="group cursor-pointer space-x-4 divide-x border-b outline-offset-[-2px] odd:bg-gray-50 hover:bg-gray-100 dark:odd:bg-gray-925 dark:hover:bg-gray-850  " tabindex="0" data-row-idx="0">
-                {% for key, value in values.items %}
-                <td class="min-w-fit max-w-sm break-words p-2">
-                    <div x-data="{ expanded: false }" @click="expanded = !expanded" class="cursor-pointer">
-                        <div :class="expanded ? '' : 'line-clamp-2'">
-                            <div dir="auto">
-                                <span>
-                                    {{values|dict_get:key}}
-                                </span>
-                            </div>
-                        </div>
-                    </div>
-                    
-                </td>
-            {% endfor %}
-        </tr>
-        {% endfor %}
-    </tbody>
-</table>
-<script src="{% static 'cdn.min.js' %}"></script>
+<div class="container-fluid px-0">
+  <main class="px-3">
+    <div class="py-4 text-center">
+      <img class="d-block mx-auto mb-3"
+           src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg"
+           alt="HuggingFace" width="72" height="57">
+      <h2>평가 결과 추가</h2>
+      <p class="lead">평가 결과를 추가합니다</p>
+    </div>
+
+    <div class="row">
+      <div class="col-12">
+        <form class="needs-validation" 
+              action="{% url 'model_dashboard:add_eval_result' benchmark.id %}"
+              method="post"
+              enctype="multipart/form-data"
+              novalidate>
+          {% include "form_errors.html" %}
+          {% csrf_token %}
+
+          <input type="hidden" name="benchmark_name" value="{{ benchmark.benchmark_name }}">
+
+          <div class="mb-3 row">
+            <label for="model-input" class="col-sm-2 col-form-label">모델 이름</label>
+            <div class="col-sm-10">
+              <input type="text"
+                     id="model-input"
+                     name="model_name"
+                     class="form-control"
+                     placeholder="모델 탭의 데이터를 입력"
+                     required>
+              <div class="invalid-feedback">
+                모델 탭의 모델을 입력해주세요.
+              </div>
+            </div>
+          </div>
+
+          <!-- ✅ JSON 업로드 input 추가 -->
+          <div class="mb-3 row">
+            <label for="json_file" class="col-sm-2 col-form-label">
+              JSON 파일 업로드
+            </label>
+            <div class="col-sm-10">
+              <input type="file"
+                     class="form-control"
+                     id="json_file"
+                     name="json_file"
+                     accept=".json">
+              <div class="form-text">
+                업로드하면 아래 텍스트 입력보다 우선 적용됩니다.
+              </div>
+            </div>
+          </div>
+
+          <!-- 기존 textarea -->
+          <div class="mb-3 row">
+            <label for="evaluate_result" class="col-sm-2 col-form-label">
+              샘플 데이터
+              <span class="text-muted">(Optional)</span>
+            </label>
+            <div class="col-sm-10">
+              <textarea class="form-control"
+                        rows="5"
+                        id="evaluate_result"
+                        name="evaluate_result"
+                        placeholder='예: {"1": {"입력":"1+1=","출력":"2"}} 또는 [{"입력":"1+1=","출력":"2"}]'>{{ evaluate_result|default_if_none:'' }}</textarea>
+              <div class="invalid-feedback">
+                결과 데이터를 JSON 형식으로 입력해주세요.
+              </div>
+            </div>
+          </div>
+
+          <hr>
+
+          <!-- Metrics -->
+          {% for head in headers %}
+          <div class="mb-3 row">
+            <label for="{{ head }}_score" class="col-sm-2 col-form-label">{{ head }}</label>
+            <div class="col-sm-10">
+              <input type="text"
+                     class="form-control"
+                     id="{{ head }}_score"
+                     name="{{ head }}_score"
+                     value="{{ scores|get_item:head }}"
+                     placeholder="Enter {{ head }} value"
+                     autocomplete="off">
+            </div>
+          </div>
+          {% endfor %}
+
+          <hr>
+
+          <div class="text-end">
+            <button class="btn btn-primary px-4" type="submit">등록</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </main>
+</div>
+
+{% block script %}
+<script>
+  // Bootstrap custom validation
+  (function () {
+    'use strict'
+    var forms = document.querySelectorAll('.needs-validation')
+    Array.prototype.slice.call(forms).forEach(function (form) {
+      form.addEventListener('submit', function (event) {
+        if (!form.checkValidity()) {
+          event.preventDefault()
+          event.stopPropagation()
+        }
+        form.classList.add('was-validated')
+      }, false)
+    })
+  })()
+
+  // Autocomplete
+  $(function() {
+    $("#model-input").autocomplete({
+      source: "{% url 'model_dashboard:model_autocomplete' %}",
+      minLength: 2,
+      select: function(event, ui) {
+        $("#model-input").val(ui.item.value);
+        return false;
+      }
+    });
+  });
+</script>
 {% endblock %}

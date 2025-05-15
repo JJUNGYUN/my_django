@@ -1,7 +1,7 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.utils import timezone
 from django.http import HttpResponseNotAllowed
-from django.core.paginator import Paginator
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.views.decorators.http import require_GET
@@ -73,16 +73,39 @@ def get_dashboard(request, benchmark_id):
     return render(request, 'model_dashboard/dashboard.html', context)
 
 def get_eval_result(request, benchmark_id, llm_model_id):
-    # Jsonl이나 Json일때 처리 필요하네
-    model_obj = get_object_or_404(LM_models, pk=llm_model_id)
-    benchmark_pbj = get_object_or_404(Benchmark, pk=benchmark_id)
-    dataset_obj = BenchmarkResult.objects.get(benchmark_name=benchmark_pbj, llm_model=model_obj)
-    dataset = json.loads(dataset_obj.evaluate_result)
+    model_obj     = get_object_or_404(LM_models, pk=llm_model_id)
+    benchmark_obj = get_object_or_404(Benchmark, pk=benchmark_id)
+    result_obj    = get_object_or_404(
+        BenchmarkResult,
+        benchmark_name=benchmark_obj,
+        llm_model=model_obj
+    )
+
+    # JSON 로드 & list → dict 변환
+    dataset = json.loads(result_obj.evaluate_result)
     if isinstance(dataset, list):
-        
-        dataset = {i:d for i, d in enumerate(dataset)}
-    context ={'sample_data': dataset}
-    return render(request, 'model_dashboard/eval_result.html', context=context)
+        dataset = {i: d for i, d in enumerate(dataset)}
+
+    # dict.items() → [(idx, row), ...] 리스트로 변환
+    items = list(dataset.items())
+
+    # 10개씩 페이징
+    paginator = Paginator(items, 10)
+    page_number = request.GET.get('page', 1)
+    try:
+        page_obj = paginator.page(page_number)
+    except (PageNotAnInteger, EmptyPage):
+        page_obj = paginator.page(1)
+
+    # page_obj.object_list 는 [(idx, row), …]
+    # 다시 dict 로 복원
+    page_data = {idx: row for idx, row in page_obj.object_list}
+    headers = list(page_data.values())[0].keys()
+    return render(request, 'model_dashboard/eval_result.html', {
+        'sample_data': page_data,
+        'page_obj':    page_obj,
+        'headers': headers,
+    })
 
 
 @login_required(login_url='common:login')

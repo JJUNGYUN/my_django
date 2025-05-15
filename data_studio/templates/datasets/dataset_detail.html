@@ -17,7 +17,7 @@
             <button class="copy-button" onclick="copyHiddenValue('copy-value')" aria-label="경로 복사">
                 <img src="{% static 'svg/copy.svg' %}" alt="Copy" width="16" height="16">
             </button>
-            <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
+            <input type="hidden" id="copy-value" value="{{ dataset.dataset_path }}">
         </div>
         <div class="header-meta">
             <div class="badge-group">
@@ -25,7 +25,7 @@
                 <span class="badge-pill">{{ tag }}</span>
                 {% endfor %}
             </div>
-            <span class="meta-item">Author: {{ dataset.author }}</span>
+            <span class="meta-item">Author: {{ dataset.author.first_name }}({{dataset.author.last_name}})</span>
         </div>
     </section>
 
@@ -52,25 +52,25 @@
 
     <div class="tab-content" style="overflow: hidden;">
         <!-- README -->
-        <div class="tab-pane fade show active p-3 markdown position-relative" style="overflow-y: auto; max-height: 70vh;" 
-        id="readme" role="tabpanel" aria-labelledby="readme-tab">
-    
-        <div class="markdown-body" id="readme-view" style="padding-bottom: 60px;">
-            {{ readme|mark|safe }}
+        <div class="tab-pane fade show active p-3 markdown position-relative"
+            style="overflow-y: auto; max-height: 70vh;" id="readme" role="tabpanel" aria-labelledby="readme-tab">
+
+            <div class="markdown-body" id="readme-view" style="padding-bottom: 60px;">
+                {{ readme|mark|safe }}
+            </div>
+
+            <div id="readme-edit" style="display: none;">
+                <form id="readme-form">
+                    {% csrf_token %}
+                    <textarea class="form-control" rows="20" name="readme_content" id="readme-content"
+                        style="overflow-y: auto; resize: vertical; min-height: 400px;">{{ readme }}</textarea>
+                    <div class="d-flex gap-2 mt-2">
+                        <button type="submit" class="btn btn-sm btn-success">저장</button>
+                        <button type="button" class="btn btn-sm btn-secondary" id="cancel-edit">취소</button>
+                    </div>
+                </form>
+            </div>
         </div>
-    
-        <div id="readme-edit" style="display: none;">
-            <form id="readme-form">
-                {% csrf_token %}
-                <textarea class="form-control" rows="20" name="readme_content" id="readme-content"
-                    style="overflow-y: auto; resize: vertical; min-height: 400px;">{{ readme }}</textarea>
-                <div class="d-flex gap-2 mt-2">
-                    <button type="submit" class="btn btn-sm btn-success">저장</button>
-                    <button type="button" class="btn btn-sm btn-secondary" id="cancel-edit">취소</button>
-                </div>
-            </form>
-        </div>    
-    </div>
         <!-- 파일 시스템 -->
         <div class="tab-pane fade p-3 overflow-auto" style="max-height: 70vh;" id="file_system" role="tabpanel"
             aria-labelledby="file_system-tab">
@@ -107,7 +107,7 @@
 
 {% block script %}
 <script src="{% static 'prism/prism.js' %}"></script>
-  <script src="{% static 'prism/components/prism-python.min.js' %}"></script>
+<script src="{% static 'prism/components/prism-python.min.js' %}"></script>
 <script>
     document.addEventListener("DOMContentLoaded", function () {
         // hash 탭 동기화
@@ -133,12 +133,36 @@
             });
         });
 
-        // 복사 버튼
-        window.copyHiddenValue = function (id) {
+        function copyHiddenValue(id) {
             const val = document.getElementById(id).value;
-            navigator.clipboard.writeText(val)
-                .then(() => alert("복사 완료!"));
-        };
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(val)
+                    .then(() => alert("복사 완료!"))
+                    .catch(err => {
+                        console.error("클립보드 복사 실패:", err);
+                        fallbackCopy(val);
+                    });
+            } else {
+                fallbackCopy(val);  // 지원 안될 때 대체 방식
+            }
+        }
+
+        function fallbackCopy(text) {
+            const tempInput = document.createElement("textarea");
+            tempInput.value = text;
+            document.body.appendChild(tempInput);
+            tempInput.select();
+            try {
+                document.execCommand("copy");
+                alert("복사 완료! (fallback)");
+            } catch (err) {
+                alert("복사 실패 😢");
+            }
+            document.body.removeChild(tempInput);
+        }
+
+        window.copyHiddenValue = copyHiddenValue;
 
         // README 수정 토글
         const editBtn = document.getElementById("edit-readme-btn");

@@ -2,12 +2,19 @@ from django.contrib.auth import logout, authenticate, login
 from django.shortcuts import redirect, render
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
+import json
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth import update_session_auth_hash
+from .forms import UserForm
 
 from common.forms import UserForm
 from playground.models import Playground
 from models.models import LM_models
 from label_studio.models import Project
 from datasets_repo.models import Datasets
+from .forms import ProfileForm
 
 # Create your views here.
 def logout_view(request):
@@ -54,4 +61,42 @@ def mypage(request):
         'models_list':    llm_models_list,
         'project_list':   project_list,
         'datasets_list':  datasets_list,
+    })
+
+
+
+@login_required(login_url='common:login')
+def profile_edit_view(request):
+    """
+    회원이 자신의 한글 이름(first_name), 영문 이름(last_name),
+    비밀번호(password1/password2)를 수정하는 뷰입니다.
+    ID(username)는 readonly로 표시만 합니다.
+    """
+    if request.method == 'POST':
+        form = ProfileForm(request.POST, instance=request.user)
+        if form.is_valid():
+            user = form.save(commit=False)
+            # 비밀번호 변경 처리
+            pw = form.cleaned_data.get('password1')
+            if pw:
+                user.set_password(pw)
+            # 한글/영문 이름은 폼이 자동 반영
+            user.save()
+
+            # 비밀번호 변경 시, 세션 유지
+            if pw:
+                update_session_auth_hash(request, user)
+
+            messages.success(request, "프로필이 성공적으로 수정되었습니다.")
+            return redirect('common:profile_edit')
+        else:
+            messages.error(request, "입력값을 다시 확인해주세요.")
+    else:
+        form = ProfileForm(instance=request.user)
+        # 비밀번호 필드 autocomplete 방지
+        form.fields['password1'].widget.attrs.update({'autocomplete': 'new-password'})
+        form.fields['password2'].widget.attrs.update({'autocomplete': 'new-password'})
+
+    return render(request, 'common/profile_edit.html', {
+        'form': form,
     })

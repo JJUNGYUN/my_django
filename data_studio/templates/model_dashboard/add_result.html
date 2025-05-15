@@ -1,197 +1,109 @@
-{% block content %}
-{% load markdown_extras %}
-{% load custom_filters %}
-{% load mathfilters %}
-{% load static %}
-<!-- 정적 파일로 변경된 jQuery / jQuery UI 링크 -->
-<script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
-<link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
-<script src="{% static 'dashboard/jquery-ui.min.js' %}"></script>
+{# model_dashboard/add_result.html #}
+{% load static markdown_extras custom_filters mathfilters %}
 
-
-<div class="container">
-  <main>
-    
-    <div class="py-5 text-center">
-      <img class="d-block mx-auto mb-4" src="https://huggingface.co/front/assets/huggingface_logo-noborder.svg" alt="" width="72" height="57">
-      <h2>평과 결과 추가</h2>
-      <p class="lead">평과 결과 추가 합시다</p>
+<div class="container my-4">
+  <div class="label-card mx-auto" style="max-width:720px;">
+    <div class="label-card-header">
+      <h5 class="mb-0 text-center">평가 결과 추가</h5>
     </div>
-    
-    <div class="row">
-      <div class="">
-        
-        <form class="needs-validation"
-        action="{% url 'model_dashboard:add_eval_result' benchmark.id %}"
-        method="post"
-        enctype="multipart/form-data" 
-        novalidate>
-  
-    {% include "form_errors.html" %}
-    {% csrf_token %}
-    <div class="row g-3">
-  
-      <input type="hidden" value="{{benchmark.benchmark_name}}" id="benchmark_name" name="benchmark_name" class="form-control" required>
-  
-      <div class="col-sm-12">
-        <label for="model_name" value="{{ form.model_name.value|default_if_none:'' }}" class="form-label">모델 이름 </label>
-        <input type="text" id="model-input" name="model_name" class="form-control" placeholder="모델 탭의 데이터와 연동" required>
-        <div class="invalid-feedback">
-          모델 탭의 모델을 입력해주세요
+    <div class="label-card-body">
+      <form method="post"
+            action="{% url 'model_dashboard:add_eval_result' benchmark.id %}"
+            enctype="multipart/form-data"
+            class="needs-validation"
+            novalidate>
+        {% csrf_token %}
+        {% include "form_errors.html" %}
+
+        <input type="hidden" name="benchmark_name" value="{{ benchmark.benchmark_name }}">
+
+        <div class="mb-3">
+          <label for="model-input" class="form-label">모델 이름</label>
+          <input type="text" id="model-input" name="model_name"
+                 class="form-control" placeholder="모델 탭의 모델을 입력" required>
+          <div class="invalid-feedback">모델 이름을 입력해주세요.</div>
         </div>
-      </div>
-  
-      <!-- ✅ JSON 업로드 input 추가 -->
-      <div class="col-12">
-        <label for="json_file" class="form-label">JSON 파일 업로드 (Optional)</label>
-        <input type="file" class="form-control" id="json_file" name="json_file" accept=".json" autocomplete="off">
-        <div class="form-text">
-          파일을 업로드하면 아래 텍스트 입력보다 우선 적용됩니다.
+
+        <div class="mb-3">
+          <label for="json_file" class="form-label">JSON 파일 업로드 (Optional)</label>
+          <input type="file" id="json_file" name="json_file" accept=".json" class="form-control">
+          <div class="form-text">업로드 시 하단 입력 필드는 무시됩니다.</div>
         </div>
-      </div>
-  
-      <!-- 기존 textarea -->
-      <div class="col-12">
-        <label for="dataset" class="form-label">샘플 데이터<span class="text-muted">(Optional)</span></label>
-        <textarea class="form-control" rows="5" id="evaluate_result" name="evaluate_result" placeholder='모든 데이터는 1단계 딕셔너리 형태여야 합니다. 예: {&quot;1&quot;: {&quot;입력&quot;: &quot;1+1=&quot;, &quot;출력&quot;: &quot;2&quot;}} 또는 [{&quot;입력&quot;: &quot;1+1=&quot;, &quot;출력&quot;: &quot;2&quot;}]'
-        >{{ evaluate_result | default_if_none:'' }}</textarea>
-        <div class="invalid-feedback">
-          결과 데이터를 json 형식으로 넣어주세요
+
+        <div class="mb-3">
+          <label for="evaluate_result" class="form-label">샘플 데이터 <small class="text-muted">(Optional)</small></label>
+          <textarea id="evaluate_result" name="evaluate_result"
+                    class="form-control" rows="5"
+                    placeholder='예: {"1": {"입력":"1+1=","출력":"2"}}'></textarea>
+          <div class="invalid-feedback">유효한 JSON 형식으로 입력해주세요.</div>
         </div>
-      </div>
-  
-      <hr class="my-4">
-  
-      <div class="col-12">
-        <label for="metrics-input" class="form-label">Metrics</label>
+
+        <hr>
+
         {% for head in headers %}
-          <div class="input-group mb-2">
-            <span class="input-group-text w-25 justify-content-center">{{head}}</span>
-            <input type="text" id="score" value="{{ scores|get_item:head }}" name="{{head}}_score" class="form-control" placeholder="Enter {{head}} value" autocomplete="off"/>
-          </div>
+        <div class="mb-3">
+          <label class="form-label">{{ head }}</label>
+          <input type="text"
+                 name="{{ head }}_score"
+                 class="form-control"
+                 placeholder="Enter {{ head }} value"
+                 value="{{ scores|get_item:head|default_if_none:'' }}">
+        </div>
         {% endfor %}
-      </div>
-  
-      <hr class="my-4">
-  
-      <button class="w-100 btn btn-sm" type="submit">등록</button>
-    </div>
-  </form>
-  
-      </div>
-    </div>
-  </main>
 
-  <footer class="my-5 pt-5 text-muted text-center text-small">
-    <p class="mb-1">&copy; Kelson</p>
-  </footer>
+        <div class="text-end">
+          <button type="submit" class="hit-btn-solid-primary">등록</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>
 
-{% endblock %}
-
 {% block script %}
+<script src="{% static 'dashboard/jquery-3.6.0.min.js' %}"></script>
+<script src="{% static 'dashboard/jquery-ui.min.js' %}"></script>
+<link rel="stylesheet" href="{% static 'dashboard/jquery-ui.css' %}">
+
 <script>
-    // Example starter JavaScript for disabling form submissions if there are invalid fields
-    (function () {
-    'use strict'
-
-    // Fetch all the forms we want to apply custom Bootstrap validation styles to
-    var forms = document.querySelectorAll('.needs-validation')
-
-    // Loop over them and prevent submission
-    Array.prototype.slice.call(forms)
-        .forEach(function (form) {
-        form.addEventListener('submit', function (event) {
-            if (!form.checkValidity()) {
-            event.preventDefault()
-            event.stopPropagation()
-            }
-
-            form.classList.add('was-validated')
-        }, false)
-        })
-    })()
-
-    $(function() {
-        $("#dataset-input").autocomplete({
-            source: "{% url 'model_dashboard:dataset_autocomplete' %}",
-            minLength: 2,
-            select: function(event, ui) {
-                $("#dataset-input").val(ui.item.value);
-                return false;
-            }
-        });
+  // Bootstrap form validation
+  (function(){
+    'use strict';
+    document.querySelectorAll('.needs-validation').forEach(form=>{
+      form.addEventListener('submit', e=>{
+        if(!form.checkValidity()){
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        form.classList.add('was-validated');
+      });
     });
+  })();
 
-    $(function() {
-        $("#model-input").autocomplete({
-            source: "{% url 'model_dashboard:model_autocomplete' %}",
-            minLength: 2,
-            select: function(event, ui) {
-                $("#model-input").val(ui.item.value);
-                return false;
-            }
-        });
-    });
+  // autocomplete
+  $('#model-input').autocomplete({
+    source: "{% url 'model_dashboard:model_autocomplete' %}",
+    minLength: 2
+  });
 
-
-
-    document.addEventListener("DOMContentLoaded", function () {
-    const input = document.getElementById("metrics-input");
-    const addBtn = document.getElementById("add-metric-btn");
-    const list = document.getElementById("metrics-list");
-
-    const addedMetrics = new Set();  // 중복 방지
-
-    addBtn.addEventListener("click", function () {
-      const metric = input.value.trim();
-
-      if (!metric) {
-        input.classList.add("is-invalid");
-        return;
-      }
-
-      if (addedMetrics.has(metric.toLowerCase())) {
-        input.value = "";
-        return;
-      }
-
-      // 텍스트 박스 생성
-      const wrapper = document.createElement("div");
-      wrapper.className = "badge bg-secondary p-2 d-flex align-items-center";
-      wrapper.style.gap = "8px";
-
-      const span = document.createElement("span");
-      span.textContent = metric;
-
-      const removeBtn = document.createElement("button");
-      removeBtn.className = "btn btn-sm btn-close btn-close-white ms-2";
-      removeBtn.type = "button";
-
-      // 삭제 시 리스트에서 제거
-      removeBtn.onclick = function () {
-        list.removeChild(wrapper);
-        addedMetrics.delete(metric.toLowerCase());
-
-        // 히든 input도 제거
-        const hiddenInput = document.querySelector(`input[type="hidden"][value="${metric}"]`);
-        if (hiddenInput) hiddenInput.remove();
-      };
-
-      wrapper.appendChild(span);
-      wrapper.appendChild(removeBtn);
-      list.appendChild(wrapper);
-
-      // 히든 input 추가 (form 전송용)
-      const hidden = document.createElement("input");
-      hidden.type = "hidden";
-      hidden.name = "metrics[]";
-      hidden.value = metric;
-      list.appendChild(hidden);
-
-      addedMetrics.add(metric.toLowerCase());
-      input.value = "";
-      input.classList.remove("is-invalid");
+  // dynamic metrics badges
+  $(function(){
+    const added = new Set();
+    $('#add-metric-btn').click(()=>{
+      const val = $('#metrics-input').val().trim();
+      if(!val||added.has(val.toLowerCase())) return;
+      added.add(val.toLowerCase());
+      const $badge = $(`
+        <div class="badge bg-secondary me-2 mb-2">
+          ${val}
+          <button type="button" class="btn-close btn-close-white btn-sm ms-1"></button>
+          <input type="hidden" name="metrics[]" value="${val}">
+        </div>`);
+      $badge.find('.btn-close').click(()=>{
+        $badge.remove();
+        added.delete(val.toLowerCase());
+      });
+      $('#metrics-list').append($badge);
+      $('#metrics-input').val('');
     });
   });
 </script>

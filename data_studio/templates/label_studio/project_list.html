@@ -29,7 +29,7 @@
           <!-- 작성자 / 분류 / 날짜 -->
           <div class="card__content d-flex justify-content-between align-items-center flex-wrap mb-2">
             <div class="d-flex flex-column small text-muted">
-              <span>책임자: {{ project.owner.username }}</span>
+              <span>책임자: {{ project.owner.first_name }}({{ project.owner.last_name }})</span>
               <span>테스크: {{ project.task_type }}</span>
             </div>
             <div class="text-muted small">

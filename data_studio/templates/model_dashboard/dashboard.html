@@ -1,195 +1,129 @@
 {% extends 'base.html' %}
+{% load markdown_extras mathfilters custom_filters static %}
+
 {% block content %}
-
-{% load markdown_extras %}
-{% load mathfilters %}
-{% load custom_filters %}
-
 <head>
-    <title>{{ benchmark.name }}</title>
+  <title>{{ benchmark.benchmark_name }}</title>
+  <link rel="stylesheet" href="{% static 'prism/prism-tomorrow.css' %}">
 </head>
-{% load static %}
-<link rel="stylesheet" href="{% static 'prism/prism-tomorrow.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
 
-<div class="container my-3">
-    <section class="section-header">
-        <div class="header-main">
-            <h1 class="entity-title">{{ benchmark.benchmark_name }}</h1>
-            <button class="copy-button" onclick="copyHiddenValue('copy-value')" aria-label="경로 복사">
-                <img src="{% static 'svg/copy.svg' %}" alt="Copy" width="16" height="16">
-            </button>
-            <input type="hidden" id="copy-value" value="{{ model.weight_path }}">
-        </div>
-        <div class="header-meta">
-            <div class="badge-group">
-                {% for tag in benchmark.tag|split:"," %}
-                <span class="badge-pill">{{ tag }}</span>
-                {% endfor %}
-            </div>
-            <span class="meta-item">Author: {{ benchmark.author }}</span>
-        </div>
-    </section>
-    <ul class="nav nav-tabs" id="myTab" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_tab == 'readme' %}active{% endif %}" id="readme-tab" data-bs-toggle="tab" data-bs-target="#readme" 
-                    type="button" role="tab" aria-controls="readme" aria-selected="true">
-                README.md
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_tab == 'leader_board' %}active{% endif %}" id="leader_board-tab" data-bs-toggle="tab" data-bs-target="#leader_board" 
-                    type="button" role="tab" aria-controls="leader_board" aria-selected="false">
-                리더보드
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link {% if active_tab == 'add_eval_result' %}active{% endif %}" id="add_eval_result-tab" data-bs-toggle="tab" data-bs-target="#add_eval_result" 
-                    type="button" role="tab" aria-controls="add_eval_result" aria-selected="false">
-                평가 결과 등록
-            </button>
-        </li>
-    </ul>
-    <div class="tab-content">
-        <div class="tab-pane fade show active p-3 markdown position-relative"
-            style="overflow-y: auto; max-height: 70vh;" id="readme" role="tabpanel" aria-labelledby="readme-tab">
+<div class="container my-4">
+  <!-- Header -->
+  <section class="section-header mb-4">
+    <div class="header-main">
+      <h1 class="entity-title">{{ benchmark.benchmark_name }}</h1>
+      <button class="copy-button" onclick="copyHiddenValue('copy-value')" aria-label="경로 복사">
+        <img src="{% static 'svg/copy.svg' %}" alt="Copy" width="16" height="16">
+      </button>
+      <input type="hidden" id="copy-value" value="{{ benchmark.dataset_path }}">
+    </div>
+    <div class="header-meta">
+      <div class="badge-group">
+        {% for tag in benchmark.tag|split:"," %}
+          <span class="badge-pill">{{ tag }}</span>
+        {% endfor %}
+      </div>
+      <span class="meta-item">Author: {{ benchmark.author }}</span>
+    </div>
+  </section>
 
-            <!-- 보기 모드 -->
-            <div class="markdown-body" id="readme-view" style="padding-bottom: 60px;">
-                {{ readme|mark|safe }}
-            </div>
+  <!-- Tabs -->
+  <ul class="nav nav-tabs mb-3" id="myTab" role="tablist">
+    <li class="nav-item"><button class="nav-link {% if active_tab == 'readme' %}active{% endif %}"
+         data-bs-toggle="tab" data-bs-target="#readme" type="button">README.md</button></li>
+    <li class="nav-item"><button class="nav-link {% if active_tab == 'leader_board' %}active{% endif %}"
+         data-bs-toggle="tab" data-bs-target="#leader_board" type="button">리더보드</button></li>
+    <li class="nav-item"><button class="nav-link {% if active_tab == 'add_eval_result' %}active{% endif %}"
+         data-bs-toggle="tab" data-bs-target="#add_eval_result" type="button">평가 결과 등록</button></li>
+  </ul>
 
-            <!-- 수정 모드 (초기에 숨김) -->
-            <div id="readme-edit" style="display: none; padding-bottom: 60px;">
-                <textarea id="readme-textarea" class="form-control" rows="20"
-                    style="overflow-y: auto; resize: vertical; min-height: 400px;">{{ readme|escape }}</textarea>
-                <div class="mt-2 d-flex gap-2">
-                    <button class="btn btn-primary btn-sm" onclick="saveReadme({{ model.id }})">저장</button>
-                    <button class="btn btn-secondary btn-sm" onclick="cancelEdit()">취소</button>
-                </div>
-            </div>
-
-
-        </div>
-
-        <div class="tab-pane fade p-0 {% if active_tab == 'leader_board' %}show active{% endif %}"
-        id="leader_board" role="tabpanel" aria-labelledby="leader_board-tab">
-   
-     <!-- 탭 헤더 카드 -->
-     <div class="label-card mb-4">
-       <div class="label-card-header">
-         <div class="d-flex justify-content-between align-items-center">
-           <h5 class="mb-0">평과 결과</h5>
-           <small class="text-muted">{{ dataset.dataset_path }}</small>
-         </div>
-       </div>
-       <div class="label-card-body p-0">
-   
-         <!-- 결과 테이블 -->
-         <div class="overflow-x-auto">
-           <table class="manager-table mb-0">
-             <thead>
-               <tr>
-                 <th>모델</th>
-                 {% for head in headers %}
-                 <th>{{ head }}</th>
-                 {% endfor %}
-                 <th>미리보기</th>
-               </tr>
-             </thead>
-             <tbody>
-               {% for row in rows %}
-               <tr tabindex="0">
-                 <!-- 모델명 (클릭하면 줄임/확장) -->
-                 <td>
-                   <div x-data="{ expanded: false }"
-                        @click="expanded = !expanded"
-                        class="cursor-pointer">
-                     <div :class="expanded ? '' : 'text-truncate'">
-                       {{ row.model_name }}
-                     </div>
-                   </div>
-                 </td>
-   
-                 <!-- 동적 컬럼들 -->
-                 {% for head in headers %}
-                 <td>
-                   <div x-data="{ expanded: false }"
-                        @click="expanded = !expanded"
-                        class="cursor-pointer">
-                     <div :class="expanded ? '' : 'text-truncate'">
-                       {{ row|dict_get:head }}
-                     </div>
-                   </div>
-                 </td>
-                 {% endfor %}
-   
-                 <!-- 미리보기 버튼 -->
-                 <td>
-                   <a href="{% url 'model_dashboard:eval_viewer' benchmark.id row.model_id %}"
-                      class="hit-btn-solid-primary hit-btn-sm">
-                     미리보기
-                   </a>
-                 </td>
-               </tr>
-               {% endfor %}
-             </tbody>
-           </table>
-         </div>
-         <!-- /overflow-x -->
-   
-       </div>
-       <!-- /.label-card-body -->
-     </div>
-     <!-- /.label-card -->
-   
-   </div>
-   
-        <div class="tab-pane fade p-3 {% if active_tab == 'add_eval_result' %}show active{% endif %}" id="add_eval_result" role="tabpanel" aria-labelledby="add_eval_result-tab">
-            {% include 'model_dashboard/add_result.html' %}
-
-        </div>
-        <div class="d-flex justify-content-between align-items-center">
-            <div class="my-3">
-                {% if request.user == benchmark.author %}
-                <a href="#" 
-                   class="modify btn btn-sm btn-warning">수정</a>
-                <a href="#" data-uri="{% url 'model_dashboard:delete_dashboard' benchmark.id  %}" 
-                   class="delete btn btn-sm btn-danger">삭제</a>
-                {% endif %}
-            </div>
-        </div>
+  <div class="tab-content">
+    <!-- README -->
+    <div class="tab-pane fade {% if active_tab == 'readme' %}show active{% endif %} markdown p-3"
+         style="max-height:70vh;overflow:auto;" id="readme">
+      <div class="markdown-body">{{ readme|mark|safe }}</div>
     </div>
 
+    <!-- 리더보드 -->
+    <div class="tab-pane fade {% if active_tab == 'leader_board' %}show active{% endif %}"
+         id="leader_board">
+      <div class="label-card mb-4">
+        <div class="label-card-header">
+          <h5 class="mb-0">평가 결과</h5>
+        </div>
+        <div class="label-card-body p-0">
+          <div class="overflow-x-auto">
+            <table class="manager-table mb-0">
+              <thead>
+                <tr>
+                  <th>모델</th>
+                  {% for head in headers %}<th>{{ head }}</th>{% endfor %}
+                  <th>미리보기</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for row in rows %}
+                <tr tabindex="0">
+                  <td>
+                    <div x-data="{open:false}" @click="open=!open" class="cursor-pointer">
+                      <div :class="open? '' : 'text-truncate'">{{ row.model_name }}</div>
+                    </div>
+                  </td>
+                  {% for head in headers %}
+                  <td>
+                    <div x-data="{open:false}" @click="open=!open" class="cursor-pointer">
+                      <div :class="open? '' : 'text-truncate'">{{ row|dict_get:head }}</div>
+                    </div>
+                  </td>
+                  {% endfor %}
+                  <td>
+                    <a href="{% url 'model_dashboard:eval_viewer' benchmark.id row.model_id %}"
+                       class="hit-btn-solid-primary btn-sm">미리보기</a>
+                  </td>
+                </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 평가 결과 등록 -->
+    <div class="tab-pane fade {% if active_tab == 'add_eval_result' %}show active{% endif %}"
+         id="add_eval_result">
+      {% include 'model_dashboard/add_result.html' %}
+    </div>
+  </div>
+      <!-- 수정 / 삭제 버튼 -->
+      {% if request.user == benchmark.author %}
+      <div class="d-flex justify-content-end gap-2 mt-3">
+        <button class="hit-btn-outline-dark btn-sm modify">수정</button>
+        <button class="hit-btn-outline-red btn-sm delete" data-uri="{% url 'model_dashboard:delete_dashboard' benchmark.id %}">
+          삭제
+        </button>
+      </div>
+      {% endif %}
+</div>
+
+{% block script %}
 <script src="{% static 'cdn.min.js' %}"></script>
 <script src="{% static 'bootstrap.bundle.min.js' %}"></script>
-</div>
+<script>
+  document.querySelectorAll('.modify').forEach(btn=>
+    btn.addEventListener('click', ()=>confirm('아직 구현되지 않았습니다~'))
+  );
+  document.querySelectorAll('.delete').forEach(btn=>
+    btn.addEventListener('click', ()=>{
+      if(confirm('정말로 삭제하시겠습니까?')){
+        location.href = btn.dataset.uri;
+      }
+    })
+  );
+  function copyHiddenValue(id){
+    navigator.clipboard.writeText(document.getElementById(id).value)
+      .then(()=>alert('클립보드에 복사되었습니다.'));
+  }
+</script>
 {% endblock %}
-{% block script %}
-<script type='text/javascript'>
-
-const modify_elements = document.getElementsByClassName("modify");
-Array.from(modify_elements).forEach(function(element) {
-    element.addEventListener('click', function() {
-        if(confirm("아직 구현되지 않았습니다~")) {
-        };
-    });
-});
-
-
-const delete_elements = document.getElementsByClassName("delete");
-Array.from(delete_elements).forEach(function(element) {
-    element.addEventListener('click', function() {
-        if(confirm("정말로 삭제하시겠습니까?")) {
-            location.href = this.dataset.uri;
-        };
-    });
-});
-function copyHiddenValue(id) {
-    const val = document.getElementById(id).value;
-    navigator.clipboard.writeText(val)
-        .then(() => alert("아무기능없음!"));
-}
-</script>
-</script>
 {% endblock %}

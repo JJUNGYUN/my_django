@@ -27,21 +27,21 @@
                 <span class="badge-pill">{{ tag }}</span>
                 {% endfor %}
             </div>
-            <span class="meta-item">Author: {{ model.author }}</span>
+            <span class="meta-item">Author: {{ model.author.first_name }}({{ model.author.last_name }})</span>
         </div>
     </section>
-      
+
     <ul class="nav nav-tabs mt-3" id="myTab" role="tablist">
         <li class="nav-item" role="presentation">
             <a class="nav-link active" id="readme-tab" data-bs-toggle="tab" href="#readme" role="tab"
-               aria-controls="readme" aria-selected="true">
-               📄 README.md
+                aria-controls="readme" aria-selected="true">
+                📄 README.md
             </a>
         </li>
         <li class="nav-item" role="presentation">
             <a class="nav-link" id="files-tab" data-bs-toggle="tab" href="#file_system" role="tab"
-               aria-controls="file_system" aria-selected="false">
-               📁 파일 시스템
+                aria-controls="file_system" aria-selected="false">
+                📁 파일 시스템
             </a>
         </li>
     </ul>
@@ -78,9 +78,9 @@
 
         <div class="d-flex justify-content-between align-items-center">
             {% if request.user == model.author %}
-                <div class="position-sticky bottom-0" style="z-index: 10;">
-                    <button class="btn btn-outline-secondary btn-sm w-100" onclick="editReadme()">README 수정</button>
-                </div>
+            <div class="position-sticky bottom-0" style="z-index: 10;">
+                <button class="btn btn-outline-secondary btn-sm w-100" onclick="editReadme()">README 수정</button>
+            </div>
             {% endif %}
             <div class="my-3">
                 {% if request.user == model.author %}
@@ -97,9 +97,9 @@
 {% endblock %}
 {% block script %}
 <script src="{% static 'prism/prism.js' %}"></script>
-  <script src="{% static 'prism/components/prism-python.min.js' %}"></script>
+<script src="{% static 'prism/components/prism-python.min.js' %}"></script>
 <script>
-    
+
     function editReadme() {
         document.getElementById("readme-view").style.display = "none";
         document.getElementById("readme-edit").style.display = "block";

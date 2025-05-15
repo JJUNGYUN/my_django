@@ -139,7 +139,7 @@
                     <thead class="table-light">
                         {% for a in assignments %}
                         <tr>
-                            <td>{{ a.worker.username }}</td>
+                            <td>{{ a.worker.first_name }}({{a.worker.last_name}})</td>
                             <td>{{ a.progress }}%</td>
                             <td>
                                 {% if a.status == "in_progress" %}
@@ -179,7 +179,7 @@
                                 <input class="form-check-input" type="checkbox" name="workers" value="{{ user.id }}"
                                     id="user{{ user.id }}" {% if user in assigned_users %}checked{% endif %}>
                                 <label class="form-check-label" for="user{{ user.id }}">
-                                    {{ user.username }}
+                                    {{ user.first_name }}({{ user.last_name }})
                                 </label>
                             </div>
                             {% endfor %}
@@ -214,7 +214,7 @@
                                 <li>
                                     <a class="dropdown-item"
                                         href="{% url 'label_studio:download_user' project.id user.id %}">
-                                        {{ user.username }} 다운로드
+                                        {{ user.first_name }}({{ user.last_name }}) 다운로드
                                     </a>
                                 </li>
                                 {% endfor %}
@@ -228,7 +228,7 @@
                         <option value="">전체 작업자</option>
                         {% for user in project.workers.all %}
                         <option value="{{ user.id }}" {% if selected_worker == user.id %}selected{% endif %}>
-                            {{ user.username }}
+                            {{ user.first_name }}({{ user.last_name }})
                         </option>
                         {% endfor %}
                     </select>
@@ -259,24 +259,26 @@
                         <!-- 기본 행 -->
                         <tr class="expand-trigger" style="cursor:pointer">
                             <td>#{{ result.input_data.order }}</td>
-                            <td>{{ result.worker.username }}</td>
+                            <td>{{ result.worker.first_name }}({{ result.worker.last_name }})</td>
                             <td class="text-truncate" title="{{ result.input_data.data.input }}">
-                                    {% if project.task_type == "evaluation" %}
+                                {% if project.task_type == "evaluation" %}
                                     <span class="badge bg-info text-dark">input</span>
                                     {{ result.input_data.data.input|truncatechars:50 }}
                                     <br>
                                     <span class="badge bg-info text-dark">output</span>
                                     {{ result.input_data.data.output|truncatechars:50 }}
-                                    {% elif project.task_type == "compare" %}
+                                {% elif project.task_type == "compare" %}
                                     <span class="badge bg-info-subtle text-dark">input</span>
                                     {{ result.input_data.data.input|truncatechars:50 }}<br>
                                     <span class="badge bg-primary-subtle text-dark">output A</span>
                                     {{ result.input_data.data.output_a|truncatechars:50 }}<br>
                                     <span class="badge bg-success-subtle text-dark">output B</span>
                                     {{ result.input_data.data.output_b|truncatechars:50 }}
-                                    {% else %}
+                                {% elif project.task_type == "hierarchy" %}
+                                    {{ result.input_data.data.input|truncatechars:50 }}
+                                {% else %}
                                     {{ result.input_data.data.text|truncatechars:50 }}
-                                    {% endif %}
+                                {% endif %}
                             </td>
                             <td>
                                 {% if project.task_type == "classification" or project.task_type == "compare" %}
@@ -636,7 +638,7 @@
                                         {% with txt=inp.data|dict_get:"text" inp=inp.data|dict_get:"input" %}
                                         <td class="text-truncate"
                                             title="{% if txt %}{{ txt }}{% else %}{{ inp }}{% endif %}">
-                                            {{ txt|default:inp }}
+                                            {{ txt|default:inp|truncatechars:50 }}
                                         </td>
                                         {% endwith %}
                                         <td>
