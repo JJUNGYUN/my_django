@@ -21,7 +21,9 @@
 
 <div class="container py-4">
 
-    <form method="post" action="{% url 'label_studio:modify_project' project.id %}">
+    <form id="modify-form"
+      method="post"
+      action="{% url 'label_studio:modify_project' project.id %}">
         {% csrf_token %}
 
 
@@ -31,14 +33,13 @@
             <div>
                 <button type="submit" class="btn btn-success btn-hit">저장</button>
     
-                <!-- 삭제 버튼: 별도 폼을 사용 -->
-                <form method="post" action="{% url 'label_studio:delete_project' project.id %}" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn-danger"
-                            onclick="return confirm('정말 이 프로젝트를 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.');">
-                        삭제
-                    </button>
-                </form>
+                {# 삭제 버튼: form="delete-form" 로 별도 폼에 연결 #}
+                <button type="submit"
+                        form="delete-form"
+                        class="btn btn-danger"
+                        onclick="return confirm('정말 이 프로젝트를 삭제하시겠습니까? 삭제된 데이터는 복구할 수 없습니다.');">
+                  삭제
+                </button>
             </div>
         </div>
 
@@ -89,6 +90,11 @@
             </div>
         </div>
 
+    </form>
+    <form id="delete-form"
+      method="post"
+      action="{% url 'label_studio:delete_project' project.id %}">
+    {% csrf_token %}
     </form>
     <!-- 탭 영역 -->
     <!-- 탭 네비게이션 -->

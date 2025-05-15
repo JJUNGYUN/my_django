@@ -255,7 +255,7 @@ def delete_project(request, project_id):
         project_title = project.title  # 메시지용
         project.delete()
         messages.success(request, f"프로젝트 “{project_title}”이(가) 성공적으로 삭제되었습니다.")
-        return redirect('label_studio:project_list')  # 삭제 후 이동할 페이지
+        return redirect('label_studio:index')  # 삭제 후 이동할 페이지
     else:
         # POST 외 접근일 경우 편집 페이지로 리다이렉트
         return redirect('label_studio:modify_project', project_id=project.id)
