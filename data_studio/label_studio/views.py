@@ -368,8 +368,10 @@ def project_create_view(request):
                     if not name.strip():
                         continue
                     desc = label_descs[i].strip() if i < len(label_descs) else ''
+                    print(desc)
                     if project.task_type == 'evaluation' and i < len(label_options):
-                        desc += label_options[i]
+                        desc = json.loads(label_options[i])
+                    desc = ','.join([i['value'] for i in desc])
                     Label.objects.create(
                         project=project,
                         name=name.strip(),
@@ -559,8 +561,30 @@ def move_work_page_view(request, project):
         })
 
     elif project.task_type == 'hierarchy':
+        def find_id_path(tree_nodes, name_path):
+            """
+            tree_nodes: [{'id', 'name', 'children':[...]}…]
+            name_path: ["B","B","C"]
+            returns: [69,70,73] or None
+            """
+            def dfs(nodes, names):
+                if not names:
+                    return []
+                head, *tail = names
+                for node in nodes:
+                    if node['name'] == head:
+                        if not tail:
+                            return [node['id']]
+                        sub = dfs(node.get('children', []), tail)
+                        if sub is not None:
+                            return [node['id']] + sub
+                return None
+
+            return dfs(tree_nodes, name_path)
+
         # Label 인접리스트로 노드 트리를 빌드 (위에서 설명했던 로직 그대로)
         all_labels = Label.objects.filter(project=project).order_by('order','id')
+        # 1) 트리 빌드
         nodes = {lbl.id: {'id':lbl.id,'name':lbl.name,'children':[]} for lbl in all_labels}
         roots = []
         for lbl in all_labels:
@@ -569,8 +593,12 @@ def move_work_page_view(request, project):
             else:
                 roots.append(nodes[lbl.id])
 
-        # 기존 저장값 꺼내오기
-        selected_path = ctx.get('selected_path', [])
+        # 2) 기존 저장된 “이름 경로”
+        saved_names = ctx.get('selected_path', [])
+
+        # 3) 이름 → ID 경로로 변환
+        selected_path = find_id_path(roots, saved_names) or []
+
         ctx.update({
         'hierarchy': roots,
         'selected_path': selected_path,
