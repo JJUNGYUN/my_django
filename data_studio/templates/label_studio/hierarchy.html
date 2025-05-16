@@ -169,6 +169,7 @@
       const li = document.createElement('li');
       const span = document.createElement('span');
       span.textContent = node.name;
+      span.setAttribute('data-id', node.id);
       span.className = 'node' + (node.children?.length ? ' parent' : '');
 
       span.addEventListener('click', e => {
@@ -209,10 +210,14 @@
 
     let items = data;
     prevPath.forEach(id => {
+      // find the node in our JS data model
       const nodeInfo = items.find(n => n.id === id);
-      const spanList = Array.from(treeContainer.querySelectorAll('span.node'));
-      const span     = spanList.find(s => s.textContent === nodeInfo.name);
+
+      // directly select the span with matching data-id
+      const span = treeContainer.querySelector(`span.node[data-id="${id}"]`);
       if (span) span.click();
+
+      // descend into its children for the next iteration
       items = nodeInfo.children || [];
     });
   }
