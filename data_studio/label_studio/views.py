@@ -561,30 +561,8 @@ def move_work_page_view(request, project):
         })
 
     elif project.task_type == 'hierarchy':
-        def find_id_path(tree_nodes, name_path):
-            """
-            tree_nodes: [{'id', 'name', 'children':[...]}…]
-            name_path: ["B","B","C"]
-            returns: [69,70,73] or None
-            """
-            def dfs(nodes, names):
-                if not names:
-                    return []
-                head, *tail = names
-                for node in nodes:
-                    if node['name'] == head:
-                        if not tail:
-                            return [node['id']]
-                        sub = dfs(node.get('children', []), tail)
-                        if sub is not None:
-                            return [node['id']] + sub
-                return None
-
-            return dfs(tree_nodes, name_path)
-
         # Label 인접리스트로 노드 트리를 빌드 (위에서 설명했던 로직 그대로)
         all_labels = Label.objects.filter(project=project).order_by('order','id')
-        # 1) 트리 빌드
         nodes = {lbl.id: {'id':lbl.id,'name':lbl.name,'children':[]} for lbl in all_labels}
         roots = []
         for lbl in all_labels:
@@ -593,12 +571,8 @@ def move_work_page_view(request, project):
             else:
                 roots.append(nodes[lbl.id])
 
-        # 2) 기존 저장된 “이름 경로”
-        saved_names = ctx.get('selected_path', [])
-
-        # 3) 이름 → ID 경로로 변환
-        selected_path = find_id_path(roots, saved_names) or []
-
+        # 기존 저장값 꺼내오기
+        selected_path = ctx.get('selected_path', [])
         ctx.update({
         'hierarchy': roots,
         'selected_path': selected_path,
@@ -741,13 +715,39 @@ def get_work_context(request, project, task_field_name):
             result_value = default_value
         else:
             result_value = default_value['label']
-            
+        def find_id_path(tree_nodes, name_path):
+            """
+            tree_nodes: [{'id', 'name', 'children':[...]}…]
+            name_path: ["B","B","C"]
+            returns: [69,70,73] or None
+            """
+            def dfs(nodes, names):
+                if not names:
+                    return []
+                head, *tail = names
+                for node in nodes:
+                    if node['name'] == head:
+                        if not tail:
+                            return [node['id']]
+                        sub = dfs(node.get('children', []), tail)
+                        if sub is not None:
+                            return [node['id']] + sub
+                return None
+
+            return dfs(tree_nodes, name_path)
         # — 기존에 선택된 경로(name 배열) → id 배열로 변환 —
         raw_labels = default_value.get('label', [])#default_value.get('label', [])  # e.g. ["대분류B","중분류B1","소분류B1-1"])
-        # 프로젝트 전체 hierarchy 라벨을 미리 가져왔다고 가정
-        labels = Label.objects.filter(project=project, label_type='hierarchy')
-        name_to_id = {lbl.name: lbl.id for lbl in labels}
-        selected_path = [ name_to_id[name] for name in raw_labels if name_to_id.get(name) ]
+        all_labels = Label.objects.filter(project=project).order_by('order','id')
+        nodes = {lbl.id: {'id':lbl.id,'name':lbl.name,'children':[]} for lbl in all_labels}
+        roots = []
+        for lbl in all_labels:
+            if lbl.parent_id:
+                nodes[lbl.parent_id]['children'].append(nodes[lbl.id])
+            else:
+                roots.append(nodes[lbl.id])
+
+        saved_names = raw_labels
+        selected_path = find_id_path(roots, saved_names) or []
     else:
         result_value = ""
         selected_path = []
